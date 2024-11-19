@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add User to Organization</title>
+</head>
+<body>
+    <h1>Add User to Organization</h1>
+
+    <!-- Display Success Message -->
+    <% if (messages && messages.success) { %>
+        <div style="color: green; font-weight: bold;">
+            <%= messages.success %>
+        </div>
+    <% } %>
+
+    <!-- Display Error Message -->
+    <% if (messages && messages.error) { %>
+        <div style="color: red; font-weight: bold;">
+            <%= messages.error %>
+        </div>
+    <% } %>
+
+    <!-- Form to Add User to Organization -->
+    <form action="/add_employee" method="POST">
+        <label for="email">User's Email:</label>
+        <input type="email" name="email" id="email" required>
+        <button type="submit">Add User</button>
+    </form>
+</body>
+</html>

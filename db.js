@@ -24,5 +24,8 @@ db.connect((err) => {
   }
 });
 
+
+
+
 // Export the database connection to be used in other files
 module.exports = db;

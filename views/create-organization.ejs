@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Organization</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <div class="navbar">
+        
+        <div class="logoimg">
+            <img src="MinuteToManage.png" />
+        </div>
+        <a href="/manager_dashboard">Dashboard</a>
+        <a href="/schedule_employee">Schedule Employee</a>
+        <a href="/view_requests">Employee Requests</a>
+        <a href="/add_employee">Add Employee</a>
+        <a href="/view_employee">View Employees</a>
+        <a href="/create_org">Create An Organization</a>
+       
+    </div>
+
+    
+    
+    <div class="form-container">
+        <h1>Create An Organization</h1>
+
+        <form action="#" method="post">
+            <!-- Name -->
+            <div class="form-group">
+                <label for="name">Organization Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+                <!-- Display Success Message -->
+                <% if (messages && messages.success) { %>
+                    <div style="color: green; font-weight: bold;">
+                        <%= messages.success %>
+                    </div>
+                <% } %>
+
+                <!-- Display Error Message -->
+                <% if (messages && messages.error) { %>
+                    <div style="color: red; font-weight: bold;">
+                        <%= messages.error %>
+                    </div>
+                <% } %>
+
+            <!-- Submit Button -->
+            <div class="form-group">
+                <button type="submit">Create Organization</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
