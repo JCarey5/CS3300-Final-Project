@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
 
 // Handle login form submission
 app.post('/login', passport.authenticate('local', {
-  successRedirect: '/dashboard',
+  successRedirect: '/manager_dashboard',
   failureRedirect: '/',
   failureFlash: true
 }));
@@ -155,6 +155,62 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
   });
 });
+
+
+
+app.get('/manager_dashboard', (req, res) => {
+  if (req.isAuthenticated()) {
+    const userFirstName = req.user ? req.user.firstName : null;
+    const userObject = {
+      firstName: userFirstName
+    }
+    res.render('ManagerDashBoard', userObject)
+    
+  } else {
+    res.redirect('/');
+  }
+})
+
+
+app.get('/schedule_employee', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render('ScheduleEmployee')
+    
+  } else {
+    res.redirect('/');
+  }
+})
+
+
+app.get('/view_requests', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render('ViewEmployeeRequests')
+    
+  } else {
+    res.redirect('/');
+  }
+})
+
+
+app.get('/add_employee', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render('addEmployee')
+    
+  } else {
+    res.redirect('/');
+  }
+})
+
+app.get('/view_employee', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render('ViewEmployeeContacts')
+    
+  } else {
+    res.redirect('/');
+  }
+})
+
+
 
 const port = 3000;
 app.listen(port, () => {
