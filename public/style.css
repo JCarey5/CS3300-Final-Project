@@ -1,0 +1,278 @@
+
+
+
+body {
+    font-family: 'Book Antiqua';
+    background-color: #D8C6C0; 
+    padding: 20px;
+    line-height: 1.6;
+    align-items: center;
+    justify-content: center;
+}
+.form-container {
+    
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #f9f3f1;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    width: 95%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #244855;
+    border-radius: 5px;
+    font-size: 16px;
+    outline: none;
+}
+
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus {
+    border-color: #90AEAD;
+}
+
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* Form Group for Create Org */
+.form-group {
+    margin-bottom: 25px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+    .form-group label {
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* Input  Boxes*/
+    .form-group input[type="text"],
+    .form-group input[type="time"] {
+        width: 95%;
+        padding: 12px;
+        margin-top: 5px;
+        border: 1px solid #244855;
+        border-radius: 5px;
+        font-size: 16px;
+        outline: none;
+        
+    }
+
+        .form-group input[type="time"]:focus,
+        .form-group input[type="text"]:focus {
+            border-color: #90AEAD;
+        }
+
+  
+    .form-group button {
+        background-color: #244855;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+        
+    }
+
+        .form-group button:hover {
+            background-color: #90AEAD;
+        }
+
+
+
+        .signup-button {
+            background-color: #D8C6C0;
+            color: #333;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .signup-button:hover {
+            background-color: #e0e0e0;
+        }
+
+/* create org navbar */
+.create-org-nav {
+    overflow: hidden;
+    
+    font-family: 'Book Antiqua';
+}
+
+    /* Links inside the create org navbar */
+    .create-org-nav a {
+        float: left;
+        font-size: 16px;
+        color: #333;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+}
+/* hover option for create org navbar */
+.create-org-nav a:hover, .dropdown:hover .dropbtn {
+    background-color: #244855;
+    color: white;
+    
+}
+
+/* Navbar container for dashboard */
+.navbar {
+    overflow: hidden;
+    
+    font-family: 'Book Antiqua';
+    display: flex;
+    align-items: center; /* Vertically centers items */
+    padding: 10px 20px;
+    background-color: #244855;
+    color: #F9F3F1;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+    /* Links inside the navbar */
+    .navbar a {
+        float: left;
+        font-size: 16px;
+        color: #d8c6c0;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+/* The dropdown container */
+.dropdown {
+    float: left;
+    overflow: hidden;
+}
+
+    /* Dropdown button */
+    .dropdown .dropbtn {
+        font-size: 16px;
+        border: none;
+        outline: none;
+        color:#d8c6c0;
+        padding: 14px 16px;
+        background-color: inherit;
+        font-family: inherit;
+        margin: 0; /* Important for vertical align on mobile phones */
+    }
+
+    /* Add a blue background color to navbar links on hover */
+    .navbar a:hover, .dropdown:hover .dropbtn {
+        background-color: #244855;
+        color: #F9F3F1;
+        
+    }
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    
+    min-width: 160px;
+    
+    z-index: 1;
+}
+
+    /* Links inside the dropdown */
+    .dropdown-content a {
+        float: none;
+        color: #333;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        text-align: left;
+    }
+
+        /* Add a blue background color to dropdown links on hover */
+        .dropdown-content a:hover {
+            background-color: #244855;
+        }
+        
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.logoimg img {
+    width: 70px;  /* Adjust size as needed */
+    height: 50px;
+}
+
+/* Coworkers Table Styling */
+.coworkers-table {
+    width: 100%;
+    max-width: 700px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 16px;
+    color: #333;
+}
+
+.coworkers-table thead {
+    background-color: #244855;
+    color: #F9F3F1}
+
+.coworkers-table th, .coworkers-table td {
+    padding: 12px 15px;
+    border: 1px solid #F9F3F1;
+}
+
+.coworkers-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.coworkers-table tbody tr:hover {
+    background-color: #e0e0e0;
+}
+
+
+
+/* Dropped Shifts Table Styling (optional) */
+.dropped-shifts-table {
+    width: 100%;
+    max-width: 700px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 16px;
+    color: #333;
+}
+
+.dropped-shifts-table thead {
+    background-color: #244855;
+    color: #F9F3F1;
+}
+
+.dropped-shifts-table th, .dropped-shifts-table td {
+    padding: 12px 15px;
+    border: 1px solid #D8C6C0;
+}
+
+.dropped-shifts-table tbody tr:nth-child(even) {
+    background-color: #f9f3f1;
+}
+
+.dropped-shifts-table tbody tr:hover {
+    background-color: #e0e0e0;
+}
+
