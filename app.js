@@ -79,75 +79,64 @@ app.get('/register', (req, res) => {
   res.render('register', { message: req.flash('error') });
 });
 
-// Handle registration form submission (POST)
 app.post('/register', (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { first_name, last_name, email, password, confirm_password } = req.body;
 
-  // Basic validation
-  if (!firstName || !lastName || !email || !password) {
-    req.flash('error', 'All fields are required!');
+  // Server-side validation
+
+  // Check if all fields are filled
+  if (!first_name || !last_name || !email || !password || !confirm_password) {
+    req.flash('error', 'Please fill out all fields.');
     return res.redirect('/register');
   }
 
-  if (firstName.length > 20 || lastName.length > 20) {
-    req.flash('error', 'First Name and Last Name should be less than 20 characters!');
+  // Check if the passwords match
+  if (password !== confirm_password) {
+    req.flash('error', 'Passwords do not match.');
     return res.redirect('/register');
   }
 
-  // Email format validation (basic check)
+  // Validate email format using a regular expression
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    req.flash('error', 'Please enter a valid email address!');
+    req.flash('error', 'Please enter a valid email address.');
     return res.redirect('/register');
   }
 
-  // Check if email already exists in the database
+  // Check if the email is already registered
   db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
-    if (err) {
-      req.flash('error', 'Database error. Please try again later.');
-      return res.redirect('/register');
-    }
+    if (err) throw err;
 
     if (results.length > 0) {
-      req.flash('error', 'Email is already taken!');
+      req.flash('error', 'Email is already registered.');
       return res.redirect('/register');
     }
 
-    // Hash the password before saving it to the database
+    // Hash password before storing in the database
     bcrypt.hash(password, 10, (err, hashedPassword) => {
-      if (err) {
-        req.flash('error', 'Error hashing the password.');
-        return res.redirect('/register');
-      }
+      if (err) throw err;
 
-      // Insert the new user into the database
-      const newUser = { firstName, lastName, email, password: hashedPassword };
+      // Insert user data into the database with organization and organizationAdmin set to NULL
+      const newUser = {
+        first_name,
+        last_name,
+        email,
+        password: hashedPassword,
+        organization_id: null,  // organization_id set to NULL
+        organization: null,  // organization set to NULL
+        organizationAdmin: null // organizationAdmin set to NULL
+      };
+
       db.query('INSERT INTO users SET ?', newUser, (err, result) => {
-        if (err) {
-          req.flash('error', 'Database error. Please try again later.');
-          return res.redirect('/register');
-        }
-
-        req.flash('success', 'Registration successful! You can now log in.');
-        res.redirect('/');
+        if (err) throw err;
+        req.flash('success', 'Registration successful! You can log in now.');
+        return res.redirect('/');
       });
     });
   });
 });
 
-// Dashboard page (protected)
-app.get('/dashboard', (req, res) => {
-  if (req.isAuthenticated()) {
-    const userFirstName = req.user ? req.user.firstName : null;
-    const userObject = {
-      firstName: userFirstName
-    }
-    res.render('dashboard', userObject)
-    //res.send(`<h1>Welcome, ${req.user.firstName} ${req.user.lastName}!</h1><p><a href="/logout">Logout</a></p>`);
-  } else {
-    res.redirect('/');
-  }
-});
+
 
 // Logout route
 app.get('/logout', (req, res) => {
@@ -160,7 +149,7 @@ app.get('/logout', (req, res) => {
 
 app.get('/manager_dashboard', (req, res) => {
   if (req.isAuthenticated()) {
-    const userFirstName = req.user ? req.user.firstName : null;
+    const userFirstName = req.user ? req.user.first_name : null;
     const userObject = {
       firstName: userFirstName
     }
@@ -211,90 +200,7 @@ app.post('/add_employee', (req, res) => {
   const userEmail = req.user.email;  // The email of the logged-in admin user
   const organizationId = req.user.organization_id || null; // Assuming the logged-in user has an organization_id
 
-  console.log(userEmail)
-  console.log(organizationId)
   
-
-  // Check if the logged-in user is an admin for the organization
-  const checkAdminQuery = 'SELECT isAdmin FROM organization_users WHERE email = ? AND organization_id = ?';
-  db.execute(checkAdminQuery, [userEmail, organizationId], (err, result) => {
-      if (err) {
-          console.error('Error checking admin status:', err);
-          req.flash('error', 'There was an error verifying admin status.');
-          return res.redirect('/add_employee');
-      }
-
-      
-      const userEmailToAdd = req.body.email;  // The email of the user to add
-
-      // Check if the user exists in the `users` table
-      const checkUserQuery = 'SELECT * FROM users WHERE email = ?';
-      db.execute(checkUserQuery, [userEmailToAdd], (err, result) => {
-          if (err) {
-              console.error('Error checking user existence:', err);
-              req.flash('error', 'There was an error checking the user existence.');
-              return res.redirect('/add_employee');
-          }
-
-          // If the user does not exist, show an error
-          if (result.length === 0) {
-              req.flash('error', 'User does not exist.');
-              return res.redirect('/add_employee');
-          }
-
-          // Extract the user's details from the `users` table (based on the submitted email)
-          const user = result[0];  // The user object returned from the query
-          const firstName = user.first_name;
-          const lastName = user.last_name;
-          const phoneNumber = user.phone_number || null;  // Default to null if phone_number is missing
-
-          // Check if the user is already in the organization
-          const checkOrgUserQuery = 'SELECT * FROM organization_users WHERE email = ? AND organization_id = ?';
-          db.execute(checkOrgUserQuery, [userEmailToAdd, organizationId], (err, result) => {
-              if (err) {
-                  console.error('Error checking if user is already in the organization:', err);
-                  req.flash('error', 'There was an error checking if the user is already in the organization.');
-                  return res.redirect('/add_employee');
-              }
-
-              // If the user is already in the organization, show an error
-              if (result.length > 0) {
-                  req.flash('error', 'User is already in this organization.');
-                  return res.redirect('/add_employee');
-              }
-
-              // Check if the user is already part of another organization
-              const checkOtherOrgQuery = 'SELECT * FROM organization_users WHERE email = ? AND organization_id != ?';
-              db.execute(checkOtherOrgQuery, [userEmailToAdd, organizationId], (err, result) => {
-                  if (err) {
-                      console.error('Error checking if user is part of another organization:', err);
-                      req.flash('error', 'There was an error checking if the user is part of another organization.');
-                      return res.redirect('/add_employee');
-                  }
-
-                  // If the user is already in another organization, show an error
-                  if (result.length > 0) {
-                      req.flash('error', 'User is already part of another organization.');
-                      return res.redirect('/add_employee');
-                  }
-
-                  // Insert the user into the `organization_users` table with appropriate details
-                  const insertOrgUserQuery = 'INSERT INTO organization_users (first_name, last_name, email, phone_number, isAdmin, organization_id) VALUES (?, ?, ?, ?, 0, ?)';
-                  db.execute(insertOrgUserQuery, [firstName, lastName, userEmailToAdd, phoneNumber, organizationId], (err, result) => {
-                      if (err) {
-                          console.error('Error adding user to organization:', err);
-                          req.flash('error', 'There was an error adding the user to the organization.');
-                          return res.redirect('/add_employee');
-                      }
-
-                      // Success message on successful insertion
-                      req.flash('success', 'User added to the organization successfully.');
-                      return res.redirect('/add_employee');
-                  });
-              });
-          });
-      });
-  });
 });
 
 
@@ -314,6 +220,7 @@ app.get('/view_employee', (req, res) => {
 
 app.get('/create_org', (req, res) => {
   if (req.isAuthenticated()) {
+    
     res.render('create-organization', {
       messages: req.flash()})
     
