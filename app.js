@@ -264,6 +264,133 @@ app.post('/add_employee', (req, res) => {
 
 
 
+
+// Route to render 'remove_employee' page and display employees
+app.get('/remove_employee', (req, res) => {
+  // Ensure the user is authenticated
+  if (!req.isAuthenticated() || !req.user) {
+    req.flash('error', 'You must be logged in to view employees.');
+    return res.redirect('/');
+  }
+
+  const loggedInUserId = req.user.id; // Logged-in user’s ID (retrieved from session)
+
+  // Step 1: Fetch the logged-in user's organization_id from the database
+  db.promise().execute('SELECT organization_id FROM users WHERE id = ?', [loggedInUserId])
+    .then(([rows]) => {
+      if (rows.length === 0) {
+        req.flash('error', 'User not found.');
+        return res.redirect('/remove_employee');
+      }
+
+      const organizationId = rows[0].organization_id; // The logged-in user's organization_id
+
+      if (!organizationId) {
+        req.flash('error', 'You are not assigned to any organization.');
+        return res.redirect('/remove_employee');
+      }
+
+      // Step 2: Search for all employees in the same organization
+      db.promise().execute('SELECT id, first_name, last_name, email FROM users WHERE organization_id = ?', [organizationId])
+        .then(([users]) => {
+          if (users.length === 0) {
+            req.flash('info', 'No employees found in your organization.');
+            return res.render('remove_employee', { employees: [], messages: req.flash()  });
+          }
+
+          // Step 3: Render the employee list with a delete button
+          res.render('remove_employee', { employees: users, messages: req.flash() });
+        })
+        .catch(err => {
+          console.error(err);
+          req.flash('error', 'An error occurred while fetching employees.');
+          res.redirect('/remove_employee');
+        });
+    })
+    .catch(err => {
+      console.error(err);
+      req.flash('error', 'An error occurred while fetching your organization.');
+      res.redirect('/remove_employee');
+    });
+});
+
+// Route to handle the removal of an employee
+app.post('/remove_employee/:id', (req, res) => {
+  const employeeId = req.params.id; // Get the employee's ID to be removed
+  const loggedInUserId = req.user.id; // Logged-in user’s ID
+
+  // Step 1: Fetch the logged-in user's organization_id
+  db.promise().execute('SELECT organization_id FROM users WHERE id = ?', [loggedInUserId])
+    .then(([rows]) => {
+      if (rows.length === 0) {
+        req.flash('error', 'User not found.');
+        return res.redirect('/dashboard');
+      }
+
+      const organizationId = rows[0].organization_id; // The logged-in user's organization_id
+
+      if (!organizationId) {
+        req.flash('error', 'You are not assigned to any organization.');
+        //return res.redirect('/dashboard');
+      }
+
+      // Step 2: Check if the user being deleted is the last employee in the organization
+      db.promise().execute('SELECT COUNT(*) AS employeeCount FROM users WHERE organization_id = ?', [organizationId])
+        .then(([countRows]) => {
+          const employeeCount = countRows[0].employeeCount;
+
+          // If this is the last employee, delete the organization
+          if (employeeCount === 1) {
+            // Step 3: Delete the organization
+            db.promise().execute('DELETE FROM organizations WHERE id = ?', [organizationId])
+              .then(() => {
+                // Step 4: Remove the employee from the users table (their organization)
+                db.promise().execute('UPDATE users SET organization_id = NULL, organization_admin = FALSE WHERE id = ?', [employeeId])
+                  .then(() => {
+                    req.flash('success', 'Employee and their organization have been deleted.');
+                    res.redirect('/remove_employee');
+                  })
+                  .catch(err => {
+                    console.error(err);
+                    req.flash('error', 'An error occurred while removing the employee.');
+                    res.redirect('/remove_employee');
+                  });
+              })
+              .catch(err => {
+                console.error(err);
+                req.flash('error', 'An error occurred while deleting the organization.');
+                res.redirect('/remove_employee');
+              });
+          } else {
+            // If not the last employee, just remove the employee
+            db.promise().execute('UPDATE users SET organization_id = NULL, organization_admin = FALSE WHERE id = ?', [employeeId])
+              .then(() => {
+                req.flash('success', 'Employee has been successfully removed from your organization.');
+                res.redirect('/remove_employee');
+              })
+              .catch(err => {
+                console.error(err);
+                req.flash('error', 'An error occurred while removing the employee.');
+                res.redirect('/remove_employee');
+              });
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          req.flash('error', 'An error occurred while checking the employee count.');
+          res.redirect('/remove_employee');
+        });
+    })
+    .catch(err => {
+      console.error(err);
+      req.flash('error', 'An error occurred while fetching your organization.');
+      res.redirect('/remove_employee');
+    });
+});
+
+
+
+
 app.get('/view_employee', (req, res) => {
 
   if (req.isAuthenticated()) {

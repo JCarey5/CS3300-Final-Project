@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>View Employees</title>
+  <title>Remove Employee</title>
   <link rel="stylesheet" href="/style.css">
+
+
+
+  <script>
+    function confirmDelete(employeeId) {
+      const confirmAction = confirm("Are you sure you want to remove this employee from your organization?");
+      if (confirmAction) {
+        document.getElementById('delete-form-' + employeeId).submit();
+      }
+    }
+  </script>
 </head>
 <body>
 
@@ -26,7 +37,6 @@
 
 
 
-
   <h1>Employees in Your Organization</h1>
 
   <% if (messages.error) { %>
@@ -37,9 +47,9 @@
     </div>
   <% } %>
 
-  <% if (messages.info) { %>
-    <div class="alert alert-info">
-      <% messages.info.forEach(function(msg) { %>
+  <% if (messages.success) { %>
+    <div class="alert alert-success">
+      <% messages.success.forEach(function(msg) { %>
         <p><%= msg %></p>
       <% }); %>
     </div>
@@ -52,6 +62,7 @@
           <th>First Name</th>
           <th>Last Name</th>
           <th>Email</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -60,6 +71,11 @@
             <td><%= employee.first_name %></td>
             <td><%= employee.last_name %></td>
             <td><%= employee.email %></td>
+            <td>
+              <form id="delete-form-<%= employee.id %>" action="/remove_employee/<%= employee.id %>" method="POST" style="display:inline;">
+                <button type="button" onclick="confirmDelete(<%= employee.id %>)">Delete</button>
+              </form>
+            </td>
           </tr>
         <% }); %>
       </tbody>
@@ -68,6 +84,5 @@
     <p>No employees found in your organization.</p>
   <% } %>
 
-  
 </body>
 </html>
