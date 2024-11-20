@@ -4,8 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add User to Organization</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+
+    <div class="navbar">
+        
+        <div class="logoimg">
+            <img src="MinuteToManage.png" />
+        </div>
+        <a href="/manager_dashboard">Dashboard</a>
+        <a href="/schedule_employee">Schedule Employee</a>
+        <a href="/view_requests">Employee Requests</a>
+        <a href="/add_employee">Add Employee</a>
+        <a href="/view_employee">View Employees</a>
+        <a href="/create_org">Create An Organization</a>
+       
+    </div>
+
+
     <h1>Add User to Organization</h1>
 
     <!-- Display Success Message -->
@@ -26,6 +43,11 @@
     <form action="/add_employee" method="POST">
         <label for="email">User's Email:</label>
         <input type="email" name="email" id="email" required>
+        
+
+        <label for="makeAdmin">Make this person an admin:</label>
+        <input type="checkbox" name="makeAdmin" id="makeAdmin">
+
         <button type="submit">Add User</button>
     </form>
 </body>

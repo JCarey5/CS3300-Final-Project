@@ -30,20 +30,20 @@
         <form action="#" method="post">
             <!-- Name -->
             <div class="form-group">
-                <label for="name">Organization Name:</label>
-                <input type="text" id="name" name="name" required>
+                <label for="organization_name">Organization Name:</label>
+                <input type="text" id="organization_name" name="organization_name" required>
             </div>
                 <!-- Display Success Message -->
-                <% if (messages && messages.success) { %>
+                <% if (info && info.success) { %>
                     <div style="color: green; font-weight: bold;">
-                        <%= messages.success %>
+                        <%= info.success %>
                     </div>
                 <% } %>
 
                 <!-- Display Error Message -->
-                <% if (messages && messages.error) { %>
+                <% if (info && info.error) { %>
                     <div style="color: red; font-weight: bold;">
-                        <%= messages.error %>
+                        <%= info.error %>
                     </div>
                 <% } %>
 
