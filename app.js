@@ -145,20 +145,14 @@ app.post('/register', (req, res) => {
 
 
 
-// Logout route
-app.get('/logout', (req, res) => {
-  req.logout((err) => {
-    res.redirect('/');
-  });
-});
-
-
 
 app.get('/manager_dashboard', (req, res) => {
   if (req.isAuthenticated()) {
     const userFirstName = req.user ? req.user.first_name : null;
+    const userOrganization = req.user ? req.user.organization : null;
     const userObject = {
-      firstName: userFirstName
+      firstName: userFirstName,
+      organization: userOrganization
     }
     res.render('ManagerDashBoard', userObject)
     
@@ -170,7 +164,11 @@ app.get('/manager_dashboard', (req, res) => {
 
 app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
-    res.render('ScheduleEmployee')
+    const userOrganization = req.user ? req.user.organization : null;
+    const userObject = {
+      organization: userOrganization
+    }
+    res.render('ScheduleEmployee', userObject)
     
   } else {
     res.redirect('/');
@@ -180,7 +178,11 @@ app.get('/schedule_employee', (req, res) => {
 
 app.get('/view_requests', (req, res) => {
   if (req.isAuthenticated()) {
-    res.render('ViewEmployeeRequests')
+    const userOrganization = req.user ? req.user.organization : null;
+    const userObject = {
+      organization: userOrganization
+    }
+    res.render('ViewEmployeeRequests', userObject)
     
   } else {
     res.redirect('/');
@@ -190,7 +192,8 @@ app.get('/view_requests', (req, res) => {
 
 app.get('/add_employee', (req, res) => {
   if (req.isAuthenticated()) {
-    res.render('add_employee', {messages: req.flash()})
+    const organization = req.user ? req.user.organization : null;
+    res.render('add_employee', { organization, messages: req.flash()})
     
   } else {
     res.redirect('/');
@@ -284,6 +287,9 @@ app.get('/remove_employee', (req, res) => {
       }
 
       const organizationId = rows[0].organization_id; // The logged-in user's organization_id
+      const organization = req.user ? req.user.organization : null;
+      
+
 
       if (!organizationId) {
         req.flash('error', 'You are not assigned to any organization.');
@@ -295,11 +301,11 @@ app.get('/remove_employee', (req, res) => {
         .then(([users]) => {
           if (users.length === 0) {
             req.flash('info', 'No employees found in your organization.');
-            return res.render('remove_employee', { employees: [], messages: req.flash()  });
+            return res.render('remove_employee', { organization, employees: [], messages: req.flash()  });
           }
 
           // Step 3: Render the employee list with a delete button
-          res.render('remove_employee', { employees: users, messages: req.flash() });
+          res.render('remove_employee', { organization, employees: users, messages: req.flash() });
         })
         .catch(err => {
           console.error(err);
@@ -408,6 +414,7 @@ app.get('/view_employee', (req, res) => {
         }
 
         const organizationId = rows[0].organization_id; // The logged-in user's organization_id
+        const organization = req.user ? req.user.organization : null;
 
         if (!organizationId) {
           req.flash('error', 'You are not assigned to any organization.');
@@ -419,13 +426,13 @@ app.get('/view_employee', (req, res) => {
           .then(([users]) => {
             if (users.length === 0) {
               req.flash('info', 'No employees found in your organization.');
-              return res.render('view_employee', { employees: [], 
+              return res.render('view_employee', { organization, employees: [], 
                 messages: req.flash()
               });
             }
 
             // Step 3: Render the employees' list in the view
-            res.render('view_employee', { employees: users,
+            res.render('view_employee', { organization, employees: users,
               messages: req.flash()
              });
           })

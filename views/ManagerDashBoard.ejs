@@ -20,9 +20,13 @@
             <a href="/logout">Logout</a>
         </div>
 
-
-        <h1>Welcome, <%= firstName %></h1>
+        <!-- Check if organization exists and display accordingly -->
+        <% if (organization && organization !== null) { %>
+            <h1>Welcome <%= firstName %> to <%= organization %></h1>
+        <% } else { %>
+            <h1>Welcome <%= firstName %></h1>
+            <p>You are not currently part of an organization.</p>
+        <% } %>
 
         
-        <p>Calender Goes here - day view - </p>
         </body>
