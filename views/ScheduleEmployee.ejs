@@ -29,3 +29,67 @@
             <p>You are not currently part of an organization.</p>
         <% } %>
         </body>
+
+        div class="contents">
+            <div id="calendar1" data-binding-calendar='{ "views": { "fullMonth": { "showExtraTitleBarButtons": false } } }'></div>
+            
+        </div>
+        <button id = "exportButton">Export Events to MySQL</button>
+        </body>
+        
+        <script>
+            var calendarInstance1 = new calendarJs( "calendar1", {
+                exportEventsEnabled: true, 
+                manualEditingEnabled: true, 
+                views: {
+                    fullMonth: {
+                        showTimesInEvents: false,
+                        minimumDayHeight: 0
+                    }
+                },
+                manualEditingEnabled: true,
+                organizerName: "Your Name",
+                organizerEmailAddress: "your@email.address",
+                visibleDays: [ 0, 1, 2, 3, 4, 5, 6 ],
+                events: {
+                    onEventsExported: function( events ) {
+                        console.log( events );
+                    }
+                }
+              
+            } );
+            var eventData = '<%= eventData%>';
+            
+
+            var decodedJsonData = eventData.replace(/&#34;/g, '"');
+            calData = JSON.parse(decodedJsonData);
+
+            console.log(calData);
+            calendarInstance1.setEventsFromJson(decodedJsonData);
+        </script>
+
+        <script>
+            var eventData;
+            document.getElementById('exportButton').addEventListener('click', function() {
+            // Call the export function
+                eventData = calendarInstance1.export('json');
+                events = calendarInstance1.getEvents();
+                console.log(events)
+            
+                if(events){
+                    fetch('/schedule_employee', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'  // Tells the server that the body is plain text
+                        },
+                        body: JSON.stringify(events)  // Directly send the string, no need to stringify
+                    })
+                    .then(data => console.log('Success:', data))
+                    .catch(error => {
+                    console.error('Error saving event:', error);
+                    alert('There was an error saving the event.');
+                    });
+                }
+            });
+        </script>
+        </html>
