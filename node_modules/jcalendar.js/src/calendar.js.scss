@@ -1,0 +1,2982 @@
+/*
+ * Calendar.js Library v2.12.1
+ *
+ * Copyright 2024 Bunoon
+ * Released under the MIT License
+ */
+
+
+@import "foundation/styles";
+
+:root {
+    // Fonts
+    --calendar-js-default-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --calendar-js-title-bar-font-weight: 900;
+    --calendar-js-large-font-size: 0.9rem;
+    --calendar-js-small-font-size: 0.7rem;
+
+    // Colors
+    --calendar-js-dark-color: #3b3a3a;
+    --calendar-js-dark-lighter-color: #575555;
+    --calendar-js-light-color: #F5F5F5;
+    --calendar-js-day-date-picker-hover-color: #a7a7a7;
+    --calendar-js-grid-border-color: #B0B0B0;
+    --calendar-js-alert-color: #C60000;
+    --calendar-js-event-color: #484848;
+    --calendar-js-event-text-color: var(--calendar-js-light-color);
+    --calendar-js-event-color-all-day: #1b3752;
+    --calendar-js-event-text-color-all-day: var(--calendar-js-light-color);
+    --calendar-js-day-names-color: #E0E0E0;
+    --calendar-js-input-border-color: #A8A8A8;
+    --calendar-js-input-background-color: #FFFFFF;
+    --calendar-js-area-disabled-stripped: rgba(  40, 40, 40, 0.1  );
+    --calendar-js-area-disabled-stripped-weekend-day: rgba(  40, 40, 40, 0.2  );
+    --calendar-js-link-color: #2471A3;
+    --calendar-js-input-hover-color: var(--calendar-js-dark-color);
+    --calendar-js-primary-button-color: var(--calendar-js-dark-color);
+    --calendar-js-secondary-button-color: var(--calendar-js-dark-color);
+    --calendar-js-tertiary-button-color: #6c757d;
+    --calendar-js-drop-down-menu-background-color: #DCDCDC;
+    --calendar-js-title-bar-button-color: var(--calendar-js-light-color);
+    --calendar-js-menu-item-icon-color: var(--calendar-js-dark-color);
+    --calendar-js-title-bar-text-color: var(--calendar-js-light-color);
+    --calendar-js-view-time-arrow-color: rgb(234, 67, 53);
+
+    // Transitions
+    --calendar-js-transition: all .3s;
+    --calendar-js-transition-faster: all .2s;
+
+    // Radius
+    --calendar-js-border-radius: 0.25rem;
+
+    // Spacing
+    --calendar-js-spacing: 10px;
+    --calendar-js-spacing-border-size: 0.5px;
+    --calendar-js-spacing-border-left-size: calc( var(--calendar-js-spacing-border-size) * 12 );
+    --calendar-js-spacing-border-size-button: var(--calendar-js-spacing-border-size);
+    --calendar-js-spacing-shadow-size: 4px;
+
+    // Side Menu
+    --calendar-js-side-menu-width: 320px;
+    --calendar-js-side-menu-width-small: 270px;
+    --calendar-js-side-menu-right-border-width: calc( var(--calendar-js-spacing-border-size) * 12 );
+
+    // Time Views
+    --calendar-js-time-view-hours-width: 70px;
+    --calendar-js-time-view-hours-height: 25px;
+    --calendar-js-time-view-arrow-line-height: 12px;
+    --calendar-js-time-view-timeline-section-width: 180px;
+    --calendar-js-time-view-timeline-section-width-small: 130px;
+
+    // Inputs
+    --calendar-js-input-box-shadow-size: 2px;
+    --calendar-js-input-checkbox-size-with-spacing: 25px;
+
+    // Events
+    --calendar-js-event-left-border: 7px solid var(--calendar-js-dark-color);
+    --calendar-js-event-expired-opacity: 0.7;
+
+    // Scroll Bars
+    --calendar-js-scroll-bar-border-style: inset 0 0 6px gray;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --calendar-js-dark-color: #282828;
+        --calendar-js-input-hover-color: var(--calendar-js-dark-color);
+        --calendar-js-primary-button-color: var(--calendar-js-dark-color);
+        --calendar-js-secondary-button-color: var(--calendar-js-dark-color);
+        --calendar-js-menu-item-icon-color: var(--calendar-js-dark-color);
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Containers
+    -------------------------------------------------------------------------
+*/
+
+div.calendar,
+div.calendar-tooltip,
+div.calendar-tooltip-event,
+div.calendar-context-menu,
+div.calendar-dialog,
+div.calendar-dialog input,
+div.calendar-dialog textarea,
+div.calendar-notification,
+div.calendar-widget {
+    font-family: var(--calendar-js-default-font);
+    color: var(--calendar-js-dark-color);
+
+    @media screen and ( min-width: $minimum-width ) {
+        font-size: var(--calendar-js-large-font-size);
+    }
+    
+    @media screen and ( max-width: $maximum-width ) {
+        font-size: var(--calendar-js-small-font-size);
+    }
+
+    div.view-shown {
+        top: 0 !important;
+        visibility: visible !important;
+    }
+
+    span.light-title-bar-text {
+        font-weight: 300 !important;
+    }
+
+    * {
+        box-sizing: content-box;
+        line-height: normal;
+
+        &::before,
+        &::after {
+            box-sizing: content-box;
+            line-height: normal;
+        }
+    }
+}
+
+div.disabled-background {
+    @include disabled-area( fixed );
+}
+
+div.disabled-area {
+    @include disabled-area( absolute );
+    display: none;
+}
+
+div.prevent-pointer-events,
+span.prevent-pointer-events {
+    pointer-events: none;
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Mode - Full-Screen
+    -------------------------------------------------------------------------
+*/
+
+@mixin fixed-height {
+    div.header-days {
+        flex: none !important;
+    }
+
+    div.row-cells {
+        flex: 1 1 auto;
+    }
+
+    div.full-month-view {
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+    }
+}
+
+div.fixed-height {
+    @include fixed-height;
+}
+
+div.full-screen-view {
+    @include full-size-view;
+    z-index: 500;
+    position: fixed !important;
+    border-radius: 0 !important;
+    border: none !important;
+
+    @include fixed-height;
+
+    div.plus-x-events {
+        display: none !important;
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Mode - Date-Picker
+    -------------------------------------------------------------------------
+*/
+
+div.calendar-date-picker {
+    position: relative;
+
+    input.calendar-date-picker-input {
+        @include input-fields( $width: auto, $margin-bottom: 0 !important );
+    }
+
+    div.calendar-hidden {
+        display: none;
+    }
+    
+    div.calendar-shown {
+        @include fade-in-effect-animation( 0.5s );
+        display: block;
+    }
+
+    div.calendar-shadow-bottom {
+        box-shadow: var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-dark-color);
+    }
+
+    div.calendar-shadow-top {
+        box-shadow: var(--calendar-js-spacing-shadow-size) calc(0px - var(--calendar-js-spacing-shadow-size)) var(--calendar-js-spacing-shadow-size) var(--calendar-js-dark-color);
+    }
+
+    div.calendar {
+        font-size: var(--calendar-js-small-font-size) !important;
+        position: absolute;
+        width: 100%;
+        max-width: 330px;
+        z-index: 1000;
+        margin-top: var(--calendar-js-spacing-border-size);
+        margin-left: -var(--calendar-js-spacing-border-size);
+        
+        div.full-month-view {
+            div.title-bar {
+                font-size: var(--calendar-js-large-font-size) !important;
+            }
+
+            div.cell {
+                padding: calc( var(--calendar-js-spacing) / 2 ) !important;
+            }
+    
+            div.days {
+                div.cell-today {
+                    background-color: var(--calendar-js-dark-color) !important;
+                    color: var(--calendar-js-light-color) !important;
+                }
+    
+                div.cell-selected {
+                    background-color: var(--calendar-js-day-date-picker-hover-color) !important;
+                }
+
+                div.cell {
+                    transition: var(--calendar-js-transition);
+                }
+    
+                div.cell:not( .cell-no-click ):hover {
+                    cursor: pointer;
+                    background-color: var(--calendar-js-day-date-picker-hover-color);
+                }
+    
+                div.cell:not( .cell-no-click ):active {
+                    @include opacity-active-effect;
+                }
+            }
+
+            div.ib-arrow-expand-left-right-icon {
+                display: none !important;
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Mode - Widget
+    -------------------------------------------------------------------------
+*/
+
+div.calendar-widget {
+    @include no-selection-allowed;
+    border-radius: var(--calendar-js-border-radius);
+    padding: var(--calendar-js-spacing);
+    background-image: linear-gradient(var(--calendar-js-dark-color), var(--calendar-js-dark-lighter-color));
+    color: var(--calendar-js-light-color);
+    max-width: 400px !important;
+    width: 100%;
+
+    div.day-name {
+        font-weight: 900;
+        margin-bottom: var(--calendar-js-spacing);
+
+        div.right-divider-line {
+            @include title-bar-divider-line;
+        }
+        
+        div.ib-arrow-left-full,
+        div.ib-arrow-right-full,
+        div.ib-plus,
+        div.ib-pin,
+        div.right-divider-line {
+            float: right;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+
+    div.day-date {
+        font-weight: 300;
+        font-size: x-large;
+        margin-bottom: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    div.scroll-margin {
+        padding-right: var(--calendar-js-spacing);
+    }
+
+    div.events {
+        margin-top: var(--calendar-js-spacing);
+        font-weight: 300;
+        max-height: 400px;
+        overflow-y: auto;
+
+        @import "foundation/view-event";
+
+        div.event {
+            margin-bottom: calc( var(--calendar-js-spacing) / 2 );
+
+            &:last-of-type {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Notifications
+    -------------------------------------------------------------------------
+*/
+
+div.calendar-notification {
+    @include fade-in-effect-animation( 0.5s );
+    @include no-selection-allowed;
+    position: fixed;
+    bottom: var(--calendar-js-spacing);
+    right: var(--calendar-js-spacing);
+    width: auto;
+    height: auto;
+    display: none;
+    z-index: 2500;
+
+    div.ib-close-icon {
+        margin-left: calc( var(--calendar-js-spacing) * 2 );
+
+        &::before,
+        &::after {
+            background-color: #9A9;
+        }
+    }
+
+    div.success,
+    div.error {
+        padding: var(--calendar-js-spacing);
+        border-radius: var(--calendar-js-border-radius);
+
+        div.ib-close-icon {
+            margin-left: calc( var(--calendar-js-spacing) * 2 );
+        }
+    }
+
+    div.success {
+        background-color: #EFE;
+        border: var(--calendar-js-spacing-border-size) solid #DED;
+        color: #9A9;
+        box-shadow: var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-dark-color);
+
+        div.ib-close-icon {
+            &::before,
+            &::after {
+                background-color: #9A9;
+            }
+        }
+    }
+
+    div.error {
+        background-color: #FEE;
+        border: var(--calendar-js-spacing-border-size) solid #EDD;
+        color: #A66;
+        box-shadow: var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-dark-color);
+        
+        div.ib-close-icon {
+            &::before,
+            &::after {
+                background-color: #A66;
+            }
+        }
+    }
+}
+
+ 
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Layout
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    @include no-selection-allowed;
+    border-radius: var(--calendar-js-border-radius);
+    overflow: hidden;
+    width: 100%;
+    min-width: 260px;
+    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+    position: relative;
+
+    sup {
+        font-size: xx-small;
+    }
+
+    p {
+        margin-bottom: 0;
+    }
+
+    div.focused-event {
+        animation: focused-event-effect 2s infinite;
+    }
+
+    div.selected-event {
+        box-shadow: 0 0 1.5px 1.5px var(--calendar-js-alert-color);
+    }
+
+    div.cut-event {
+        opacity: 0.2 !important;
+    }
+
+    div.copy-event {
+        opacity: 0.5 !important;
+    }
+    
+    div.header-days {
+        font-weight: 900 !important;
+        background-color: var(--calendar-js-day-names-color) !important;
+        color: var(--calendar-js-dark-color) !important;
+        text-transform: uppercase;
+    }
+
+    div.weekend-day {
+        background-color: var(--calendar-js-day-names-color);
+    }
+
+    div.working-day {
+        background-color: #eceaea;
+    }
+
+    div.drag-over {
+        background-color: rgba( 135, 206, 250, 0.4 ) !important;
+        transition: var(--calendar-js-transition-faster);
+    }
+
+    div.drag-not-allowed {
+        background: repeating-linear-gradient( 
+            135deg,
+            transparent,
+            transparent var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped) var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped) calc( var(--calendar-js-spacing) * 2 )
+        ),
+        repeating-linear-gradient( 
+            45deg,
+            var(--calendar-js-light-color),
+            var(--calendar-js-light-color) var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped) var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped) calc( var(--calendar-js-spacing) * 2 )
+        );
+
+        div.ib-arrow-expand-left-right-icon {
+            display: none !important;
+        }
+    }
+
+    div.drag-not-allowed-weekend-day {
+        background: repeating-linear-gradient( 
+            135deg,
+            transparent,
+            transparent var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped-weekend-day) var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped-weekend-day) calc( var(--calendar-js-spacing) * 2 )
+        ),
+        repeating-linear-gradient( 
+            45deg,
+            var(--calendar-js-day-names-color),
+            var(--calendar-js-day-names-color) var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped-weekend-day) var(--calendar-js-spacing),
+            var(--calendar-js-area-disabled-stripped-weekend-day) calc( var(--calendar-js-spacing) * 2 )
+        );
+
+        div.ib-arrow-expand-left-right-icon {
+            display: none !important;
+        }
+    }
+
+    div.no-events-available-text {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate( -50%, -50% );
+        text-align: center;
+        width: 100%;
+        max-width: 300px;
+
+        p {
+            margin-top: 0;
+            margin-bottom: var(--calendar-js-spacing);
+        }
+    }
+
+    span.link {
+        text-decoration: underline !important;
+        color: var(--calendar-js-link-color) !important;
+        transition: var(--calendar-js-transition);
+
+        &:hover {
+            @include opacity-hover-effect;
+        }
+
+        &:active {
+            @include opacity-active-effect;
+        }
+    }
+    
+    div.row-cells {
+        border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        font-weight: 300;
+        background-color: var(--calendar-js-light-color);
+        color: var(--calendar-js-dark-color);
+        width: 100%;
+
+        div.cell-1 {
+            width: 100%;
+        }
+
+        div.cell-2 {
+            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) ) / 2 );
+        }
+
+        div.cell-3 {
+            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) ) / 3 );
+        }
+        
+        div.cell-4 {
+            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) ) / 4 );
+        }
+
+        div.cell-5 {
+            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) ) / 5 );
+        }
+
+        div.cell-6 {
+            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) ) / 6 );
+        }
+
+        div.cell-7 {
+            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) ) / 7 );
+        }
+
+        div.scrollY {
+            overflow-y: auto !important;
+        }
+
+        div.cell {
+            display: inline-block;
+            text-align: center;
+            border-right: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+            position: relative;
+            overflow: hidden;
+            color: var(--calendar-js-dark-color);
+
+            @media screen and ( min-width: $minimum-width ) {
+                padding: var(--calendar-js-spacing);
+            }
+            
+            @media screen and ( max-width: $maximum-width ) {
+                padding: calc( var(--calendar-js-spacing) / 2 );
+            }
+
+            div.separator,
+            div.dots-separator {
+                height: 2px;
+            }
+
+            div.separator {
+                @media screen and ( max-width: $maximum-width ) {
+                    display: none;
+                }
+            }
+
+            div.day-muted,
+            span.day-muted,
+            span.no-click {
+                opacity: 0.3;
+            }
+
+            span {
+                display: inline-block;
+                padding: 4px;
+                padding-left: 0;
+                padding-right: 0;
+                border-radius: var(--calendar-js-border-radius);
+        
+                &.today,
+                &.first-day {
+                    padding-left: 7px;
+                    padding-right: 7px;
+                }
+
+                &.today {
+                    background-color: var(--calendar-js-dark-color) !important;
+                    color: var(--calendar-js-light-color) !important;
+                }
+
+                &.first-day {
+                    background-color: #C8C8C8;
+                    color: var(--calendar-js-dark-color);
+                }
+
+                &.holiday,
+                &.holiday-link,
+                &.month-name,
+                &.blank {
+                    display: inline-block;
+                    font-size: xx-small;
+                }
+
+                &.month-name:hover,
+                &.holiday-link:hover {
+                    text-decoration: underline;
+                    cursor: pointer;
+                }
+
+                &.blank {
+                    padding: 0 !important;
+                }
+
+                @media screen and ( max-width: $maximum-width ) {
+                    &.holiday,
+                    &.holiday-link {
+                        display: none;
+                    }
+                }
+            }
+
+            &:last-child {
+                border-right: none;
+            }
+
+            div.ib-arrow-expand-left-right-icon {
+                &::before {
+                    border-left-color: var(--calendar-js-dark-color);
+                    border-bottom-color: var(--calendar-js-dark-color);
+                }
+            
+                &::after {
+                    border-right-color: var(--calendar-js-dark-color);
+                    border-top-color: var(--calendar-js-dark-color);
+                }
+            }
+
+            &:hover div.ib-arrow-expand-left-right-icon {
+                @media screen and ( min-width: $minimum-width ) {
+                    display: block;
+                }
+                
+                @media screen and ( max-width: $maximum-width ) {
+                    display: none;
+                }
+            }
+        }
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    div.ib-arrow-expand-left-right-icon {
+        @include fade-in-effect-animation( 2s );
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        display: none;
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Layout - Pin-Up Mode
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.pin-up {
+        position: relative;
+        background-size: cover;
+        height: 250px;
+        background-color: var(--calendar-js-day-names-color);
+        border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+
+        div.pin-up-text {
+            position: absolute;
+            color: var(--calendar-js-light-color);
+            bottom: calc( var(--calendar-js-spacing) * 2 );
+            right: calc( var(--calendar-js-spacing) * 2 );
+            font-weight: 900;
+            text-align: center;
+            border-radius: var(--calendar-js-border-radius);
+            background-color: rgba(59, 58, 59, 0.6);
+            padding: calc( var(--calendar-js-spacing) * 2 );
+            padding-left: calc( var(--calendar-js-spacing) * 4 );
+            padding-right: calc( var(--calendar-js-spacing) * 4 );
+            transition: var(--calendar-js-transition);
+
+            &:hover {
+                background-color: rgba(59, 58, 59, 0.8);
+                @include opacity-hover-effect( 1.0 );
+            }
+
+            &:active {
+                @include opacity-active-effect( 0.7 );
+            }
+
+            div.day {
+                font-size: 40px;
+
+                sup {
+                    font-size: small;
+                }
+            }
+
+            div.month {
+                font-size: 20px;
+            }
+
+            div.year {
+                margin-top: 6px;
+                font-size: 14px;
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Layout - Side Menu
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {  
+    div.side-menu-disabled-background {
+        @include disabled-area( absolute );
+        display: none;
+    }
+
+    div.side-menu {
+        position: absolute;
+        height: 100%;
+        top: 0;
+        color: var(--calendar-js-light-color) !important;
+        z-index: 1500;
+        transition: var(--calendar-js-transition); 
+        background-color: var(--calendar-js-dark-color);
+        border-right: var(--calendar-js-side-menu-right-border-width) solid var(--calendar-js-light-color);
+        border-radius: var(--calendar-js-border-radius);
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        @media screen and ( min-width: $minimum-width ) {
+            width: var(--calendar-js-side-menu-width);
+            left: calc( 0px - ( var(--calendar-js-side-menu-width) + var(--calendar-js-side-menu-right-border-width) ) );
+        }
+        
+        @media screen and ( max-width: $maximum-width ) {
+            width: var(--calendar-js-side-menu-width-small);
+            left: calc( 0px - ( var(--calendar-js-side-menu-width-small) + var(--calendar-js-side-menu-right-border-width) ) );
+        }
+
+        div.main-header {
+            font-weight: 700;
+            height: auto;
+            overflow: auto;
+            position: sticky;
+            top: 0;
+            background-color: var(--calendar-js-dark-color);
+            padding: var(--calendar-js-spacing);
+            z-index: 1;
+            color: var(--calendar-js-title-bar-text-color);
+            
+            @media screen and ( min-width: $minimum-width ) {
+                font-size: 1.2rem;
+            }
+            
+            @media screen and ( max-width: $maximum-width ) {
+                font-size: 1.0rem;
+            }
+
+            p {
+                float: left;
+                margin: 0 !important;
+            }
+
+            div.right-divider-line {
+                @include title-bar-divider-line;
+            }
+
+            div[class^='ib-'],
+            div.right-divider-line {
+                margin-top: 3px;
+                float: right;
+                margin-left: var(--calendar-js-spacing);
+            }
+        }
+
+        div.content {
+            padding: var(--calendar-js-spacing);
+            padding-top: 0;
+
+            div.content-section-opened {
+                border-left: var(--calendar-js-spacing-border-left-size) solid #656363 !important;
+            }
+
+            div.content-section {
+                margin-top: var(--calendar-js-spacing);
+                border-radius: var(--calendar-js-border-radius);
+                background-color: #474545;
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-lighter-color);
+                transition: var(--calendar-js-transition);
+
+                &:first-of-type {
+                    margin-top: 0;
+                }
+    
+                div.text-header,
+                div.text-header-closed {
+                    position: relative;
+                    padding: var(--calendar-js-spacing);
+                    margin-top: 0 !important;
+                    margin-bottom: 0;
+                    cursor: pointer;
+
+                    div.right-divider-line,
+                    div.ib-arrow-down-full,
+                    div.ib-arrow-up-full,
+                    div.ib-square,
+                    div.ib-square-hollow {
+                        float: right;
+                        margin-top: 1px;
+                        margin-right: var(--calendar-js-spacing);
+
+                        &:first-of-type {
+                            margin-right: 0;
+                        }
+                    }
+
+                    div.right-divider-line {
+                        @include title-bar-divider-line;
+                    }
+
+                    div.ib-arrow-down-full,
+                    div.ib-arrow-up-full {
+                        pointer-events: none;
+                        transition-property: opacity;
+                    }
+
+                    div.ib-arrow-down-full {
+                        border-top-color: var(--calendar-js-light-color);
+                    }
+
+                    div.ib-arrow-up-full {
+                        border-bottom-color: var(--calendar-js-light-color);
+                    }
+
+                    div.ib-square-hollow {
+                        border-color: var(--calendar-js-light-color);
+                    }
+
+                    div.ib-square {
+                        background-color: var(--calendar-js-light-color);
+                    }
+                }
+
+                div.text-header {
+                    font-weight: 700;
+                }
+
+                div.checkbox-container {
+                    @include fade-in-effect-animation( 0.5s );
+                    padding-left: var(--calendar-js-spacing);
+                    padding-right: var(--calendar-js-spacing);
+                    padding-bottom: var(--calendar-js-spacing);
+
+                    label.checkbox {
+                        margin-bottom: calc( var(--calendar-js-spacing) / 2 );
+                        margin-left: var(--calendar-js-spacing);
+                        color: var(--calendar-js-light-color) !important;
+        
+                        span.check-mark {
+                            background-color: var(--calendar-js-light-color) !important;
+        
+                            &::before {
+                                border-color: var(--calendar-js-dark-color) !important;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    div.side-menu-open {
+        left: 0 !important;
+        transition: var(--calendar-js-transition);
+        box-shadow: 0 0 10px 10px var(--calendar-js-dark-color);
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Full Day View
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.full-day-view {
+        @include full-size-view-display;
+
+        span.holiday {
+            font-weight: 300 !important;
+        }
+
+        @import "foundation/view-title-bar";
+        
+        div.contents {
+            display: inline-block;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+            width: 100%;
+            padding: 0 !important;
+
+            @media screen and ( min-width: $minimum-width ) {
+                height: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-large-font-size) ) );
+            }
+            
+            @media screen and ( max-width: $maximum-width ) {
+                height: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-small-font-size) ) );
+            }
+
+            @import "foundation/view-all-day-events";
+            @import "foundation/view-event";
+
+            div.contents-events {
+                position: relative;
+
+                div.resizable {
+                    resize: vertical;
+                }
+
+                @import "foundation/view-time-arrow";
+                @import "foundation/view-hours";
+            }
+
+            div.event {
+                position: absolute;
+                margin-left: 0;
+                margin-right: 0;
+                width: calc( 100% - var(--calendar-js-time-view-hours-width) - ( var(--calendar-js-spacing) * 6 ) - ( var(--calendar-js-spacing) / 2 ) );
+                left: calc( var(--calendar-js-time-view-hours-width) + ( var(--calendar-js-spacing) * 3 ) );
+                overflow: hidden;
+                z-index: 1;
+            }
+
+            div.working-hours {
+                position: absolute;
+                width: calc( 100% - var(--calendar-js-time-view-hours-width) - ( var(--calendar-js-spacing) * 2 ) );
+                left: calc( var(--calendar-js-time-view-hours-width) + ( var(--calendar-js-spacing) * 2 ) );
+                background-color: rgba(  40, 40, 40, 0.4  );
+                display: none;
+                pointer-events: none;
+                z-index: 0;
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Full Week View
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.full-week-view {
+        @include full-size-view-display;
+
+        @import "foundation/view-title-bar";
+
+        div.contents {
+            display: inline-block;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+            width: 100%;
+            padding: 0 !important;
+
+            @media screen and ( min-width: $minimum-width ) {
+                height: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-large-font-size) ) );
+            }
+            
+            @media screen and ( max-width: $maximum-width ) {
+                height: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-small-font-size) ) );
+            }
+
+            @import "foundation/view-all-day-events";
+
+            div.header-days-container {
+                position: sticky;
+                top: 0;
+                background-color: var(--calendar-js-dark-color);
+                z-index: 100;
+    
+                div.header-days {
+                    width: calc( 100% - var(--calendar-js-time-view-hours-width) - ( var(--calendar-js-spacing) * 2 ) );
+                    background-color: blue;
+                    margin-left: calc( var(--calendar-js-time-view-hours-width) + ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-spacing-border-size) );
+                    border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+                }
+            }
+
+            div.hours {
+                position: relative;
+
+                @import "foundation/view-hours";
+            }
+
+            div.content-events-all-day {
+                div.days {
+                    height: 100% !important;
+
+                    div.cell {
+                        @import "foundation/view-event";
+
+                        div.event {
+                            width: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + ( var(--calendar-js-spacing-border-size) * 5 ) ) ) !important;
+                            margin-left: 0 !important;
+                        }
+                    }
+                }
+            }
+
+            div.days {
+                position: absolute;
+                width: calc( 100% - var(--calendar-js-time-view-hours-width) - ( var(--calendar-js-spacing) * 2 ) );
+                height: 100%;
+                top: 0;
+                left: calc( ( var(--calendar-js-time-view-hours-width) + ( var(--calendar-js-spacing) * 2 ) ) + var(--calendar-js-spacing-border-size) );
+                background-color: transparent;
+
+                div.cell {
+                    @import "foundation/view-time-arrow";
+                    @import "foundation/view-event";
+
+                    div.time-arrow {
+                        width: 100%;
+                        left: 0;
+                    }
+
+                    div.event {
+                        position: absolute;
+                        margin: 0;
+                        overflow: hidden;
+                        z-index: 1;
+                        left: var(--calendar-js-spacing);
+                        width: calc( 100% - ( ( var(--calendar-js-spacing) * 5 ) - ( var(--calendar-js-spacing-border-size) * 2 ) ) );
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+
+                        span {
+                            white-space: pre;
+                        }
+
+                        @media screen and ( min-width: $minimum-width ) {
+                            font-size: var(--calendar-js-large-font-size) !important;
+                        }
+                        
+                        @media screen and ( max-width: $maximum-width ) {
+                            font-size: var(--calendar-js-small-font-size) !important;
+                        }
+                    }
+                    
+                    div.working-hours {
+                        position: absolute;
+                        width: 100%;
+                        background-color: rgba(  40, 40, 40, 0.4  );
+                        display: none;
+                        pointer-events: none;
+                        z-index: 0;
+                        left: 0;
+                        margin-top: var(--calendar-js-spacing-border-size);
+                    }
+
+                    div.resizable {
+                        resize: vertical;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Full Month View - Date Header
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {  
+    div.full-month-view {
+        div.title-bar {
+            font-weight: var(--calendar-js-title-bar-font-weight);
+            background-color: var(--calendar-js-dark-color);
+            color: var(--calendar-js-title-bar-text-color);
+            text-align: center;
+            padding-top: var(--calendar-js-spacing);
+            padding-bottom: var(--calendar-js-spacing);
+            padding-left: calc( var(--calendar-js-spacing) / 2 );
+            padding-right: calc( var(--calendar-js-spacing) / 2 );
+            position: relative;
+    
+            div[class^='ib-'],
+            div.left-divider-line,
+            div.left-divider-line-events,
+            div.right-divider-line,
+            div.right-divider-line-full-screen-mode,
+            div.right-divider-line-views {
+                margin-left: calc( var(--calendar-js-spacing) / 2 );
+                margin-right: calc( var(--calendar-js-spacing) / 2 );
+            }
+    
+            div.left-divider-line,
+            div.left-divider-line-events,
+            div.right-divider-line,
+            div.right-divider-line-full-screen-mode,
+            div.right-divider-line-views {
+                @include title-bar-divider-line;
+            }
+    
+            div.title-container {
+                display: inline-block;
+                position: relative;
+                font-size: var(--calendar-js-large-font-size) !important;
+    
+                span.year-dropdown-button {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    padding: 3px;
+                    padding-left: 6px;
+                    padding-right: 6px;
+                    border-radius: var(--calendar-js-border-radius);
+                    background-color: #474545;
+                    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-lighter-color);
+                    font-weight: 500;
+                    transition: var(--calendar-js-transition);
+                    transition-property: opacity;
+    
+                    span.ib-arrow-down-full-medium,
+                    span.ib-arrow-up-full-medium {
+                        transition-property: opacity;
+                        margin-left: calc( var(--calendar-js-spacing) / 2 );
+                        pointer-events: none;
+                    }
+    
+                    span.ib-arrow-down-full-medium {
+                        border-top-color: var(--calendar-js-title-bar-text-color);
+                    }
+    
+                    span.ib-arrow-up-full-medium {
+                        border-bottom-color: var(--calendar-js-title-bar-text-color);
+                    }
+    
+                    &:hover {
+                        @include opacity-hover-effect;
+                    }
+        
+                    &:active {
+                        @include opacity-active-effect;
+                    }
+                }
+    
+                div.years-drop-down,
+                div.years-drop-down-no-months {
+                    @include fade-in-effect-animation( 0.5s );
+                    position: absolute;
+                    width: 240px;
+                    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+                    left: 50%;
+                    transform: translate( -50% );
+                    background-color: var(--calendar-js-light-color);
+                    border-radius: var(--calendar-js-border-radius);
+                    z-index: 1500;
+                    display: none;
+                    overflow: hidden;
+                    font-weight: 500;
+    
+                    @media screen and ( min-width: $minimum-width ) {
+                        top: calc( var(--calendar-js-spacing) + var(--calendar-js-large-font-size) );
+                    }
+                    
+                    @media screen and ( max-width: $maximum-width ) {
+                        top: calc( var(--calendar-js-spacing) + var(--calendar-js-small-font-size) );
+                    }
+    
+                    div.months {
+                        $button-spacing: 1px;
+    
+                        margin-left: $button-spacing;
+                        margin-right: $button-spacing;
+    
+                        &:first-child {
+                            margin-top: $button-spacing;
+                        }
+    
+                        div.month-name,
+                        div.month-name-selected,
+                        div.month-name-current-month {
+                            width: calc( 33.33% - ( ( var(--calendar-js-spacing) ) + ( $button-spacing * 2 ) ) );
+                            padding: calc( var(--calendar-js-spacing) / 2 );
+                            margin: $button-spacing;
+                            display: inline-block;
+                            border-radius: var(--calendar-js-border-radius);
+                            font-size: 0.7rem;
+                        }
+    
+                        div.month-name,
+                        div.month-name-current-month {
+                            background-color: var(--calendar-js-day-names-color);
+                            color: var(--calendar-js-dark-color);
+                            transition: var(--calendar-js-transition);
+
+                            &:hover {
+                                background-color: var(--calendar-js-dark-color);
+                                color: var(--calendar-js-light-color);
+                                cursor: pointer;
+                            }
+        
+                            &:active:not( .year-selected ) {
+                                @include opacity-active-effect;
+                            }
+                        }
+    
+                        div.month-name-selected {
+                            background-color: var(--calendar-js-dark-color);
+                            color: var(--calendar-js-light-color);
+                        }
+    
+                        div.month-name-current-month {
+                            background-color: #BCBCBC;
+                            color: var(--calendar-js-dark-color);
+                        }
+                    }
+        
+                    div.contents {
+                        border-radius: var(--calendar-js-border-radius);
+                        height: 100px;
+                        white-space: pre-line;
+                        -ms-word-break: break-all;
+                        word-break: break-all;
+                        overflow-x: hidden;
+                        overflow-y: auto;
+                        width: 100%;
+                        margin-left: 0 !important;
+                        margin-right: 0 !important;
+                        margin-top: calc( var(--calendar-js-spacing) / 3 );
+                        padding: 0;
+                        padding-top: calc( var(--calendar-js-spacing) / 2 );
+                        padding-bottom: calc( var(--calendar-js-spacing) / 2 );
+                        background-color: var(--calendar-js-light-color) !important;
+        
+                        div.year {
+                            display: inline-block;
+                            color: var(--calendar-js-dark-color);
+                            font-size: 0.75rem;
+                            margin-right: 5px;
+                            width: calc( 25% - 17px );
+                            text-align: center;
+                            margin-top: 5px;
+                            margin-bottom: 5px;
+                            border-radius: var(--calendar-js-border-radius);
+                            padding: 3px;
+                            transition: var(--calendar-js-transition);
+
+                            &:hover {
+                                background-color: var(--calendar-js-dark-color);
+                                color: var(--calendar-js-light-color);
+                                cursor: pointer;
+                            }
+        
+                            &:active:not( .year-selected ) {
+                                @include opacity-active-effect;
+                            }
+                        }
+    
+                        div.year-selected {
+                            background-color: var(--calendar-js-dark-color);
+                            color: var(--calendar-js-light-color);
+                            cursor: default !important;
+                        }
+    
+                        div.year-has-events {
+                            background-color: var(--calendar-js-drop-down-menu-background-color);
+                            color: var(--calendar-js-dark-color);
+                        }
+                    }
+                }
+    
+                div.years-drop-down-no-months {
+                    div.contents {
+                        margin-top: 0;
+                        height: 180px;
+                    }
+                }
+            }
+    
+            div.ib-arrow-left-full,
+            div.ib-pin,
+            div.ib-refresh,
+            div.ib-search,
+            div.ib-octagon-hollow,
+            div.ib-hamburger,
+            div.ib-rewind,
+            div.left-divider-line,
+            div.left-divider-line-events,
+            div.ib-arrow-right-full-line {
+                float: left;
+            }
+    
+            div.ib-close,
+            div.ib-hamburger-side,
+            div.ib-eye,
+            div.ib-arrow-down-full-line,
+            div.ib-plus,
+            div.ib-arrow-right-full,
+            div.ib-arrow-expand-left-right,
+            div.ib-arrow-contract-left-right,
+            div.ib-forward,
+            div.ib-expand,
+            div.ib-hourglass,
+            div.ib-bar-graph,
+            div.right-divider-line,
+            div.right-divider-line-full-screen-mode,
+            div.right-divider-line-views {
+                float: right;
+            }
+    
+            @media screen and ( min-width: $minimum-width ) {
+                div.ib-refresh,
+                div.ib-search,
+                div.ib-hamburger,
+                div.ib-hamburger-side,
+                div.ib-eye,
+                div.ib-arrow-down-full-line,
+                div.ib-octagon-hollow,
+                div.ib-expand,
+                div.ib-hourglass,
+                div.ib-rewind,
+                div.ib-forward,
+                div.ib-arrow-expand-left-right,
+                div.ib-bar-graph,
+                div.right-divider-line-full-screen-mode,
+                div.right-divider-line-views,
+                div.ib-arrow-right-full-line,
+                div.left-divider-line-events {
+                    display: inline-block;
+                }
+            }
+            
+            @media screen and ( max-width: $maximum-width ) {
+                div.ib-refresh,
+                div.ib-search,
+                div.ib-hamburger-side,
+                div.ib-eye,
+                div.ib-arrow-down-full-line,
+                div.ib-octagon-hollow,
+                div.ib-expand,
+                div.ib-hourglass,
+                div.ib-rewind,
+                div.ib-forward,
+                div.ib-arrow-expand-left-right,
+                div.ib-bar-graph,
+                div.right-divider-line-full-screen-mode,
+                div.right-divider-line-views,
+                div.ib-arrow-right-full-line,
+                div.left-divider-line-events {
+                    display: none !important;
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Full Month View - Day Events
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.full-month-view {
+        div.row-cells {
+            div.cell {
+                div.event {
+                    border-radius: var(--calendar-js-border-radius);
+                    background-color: var(--calendar-js-event-color);
+                    padding: 3px;
+                    color: var(--calendar-js-event-text-color);
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+                    border-left: var(--calendar-js-event-left-border);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+    
+                    @media screen and ( min-width: $minimum-width ) {
+                        font-size: 0.7rem !important;
+                    }
+                    
+                    @media screen and ( max-width: $maximum-width ) {
+                        font-size: 0.5rem !important;
+                    }
+    
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+    
+                    div.ib-refresh-small {
+                        margin-right: calc( var(--calendar-js-spacing) / 2 );
+                    }
+                }
+    
+                div.event-circle {
+                    display: inline-block;
+                    border-radius: 50% !important;
+                    border-left: none !important;
+                    height: 5px;
+                    width: 5px;
+                    margin-left: 2.5px;
+                    margin-right: 2.5px;
+    
+                    &:last-child {
+                        margin-bottom: 5px;
+                    }
+                }
+                
+                div.expired {
+                    opacity: var(--calendar-js-event-expired-opacity);
+                }
+    
+                div.not-in-current-month {
+                    opacity: 0.1;
+                }
+    
+                div.all-day {
+                    background-color: var(--calendar-js-event-color-all-day) !important;
+                    color: var(--calendar-js-event-text-color-all-day);
+                }
+    
+                div.plus-x-events {
+                    display: inline-block;
+                    font-size: smaller;
+                    text-align: center;
+                    margin-top: calc( var(--calendar-js-spacing) / 2 );
+                    margin-left: auto;
+                    margin-right: auto;
+                    transition: var(--calendar-js-transition);
+    
+                    &:hover {
+                        @include opacity-hover-effect;
+                        text-decoration: underline;
+                    }
+                    
+                    &:active {
+                        @include opacity-active-effect;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Full Year View
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.full-year-view {
+        @include full-size-view-display;
+
+        @import "foundation/view-title-bar";
+
+        div.contents {
+            @include view-contents( true );
+
+            div.year-month {
+                border-radius: var(--calendar-js-border-radius);
+                border-bottom-left-radius: 0.15rem;
+                border-bottom-right-radius: 0.15rem;
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+                background-color: var(--calendar-js-day-names-color);
+                display: inline-block;
+                margin: calc( var(--calendar-js-spacing) / 2 );
+
+                @media screen and ( min-width: $minimum-width ) {
+                    width: calc( 50% - ( var(--calendar-js-spacing) + ( var(--calendar-js-spacing) / 4 ) ) );
+                }
+                
+                @media screen and ( max-width: $maximum-width ) {
+                    width: calc( 100% - ( var(--calendar-js-spacing) + ( var(--calendar-js-spacing) / 4 ) ) );
+                }
+
+                div.title-bar-container {
+                    overflow: hidden;
+
+                    div.title-bar {
+                        background-color: var(--calendar-js-dark-color);
+                        color: var(--calendar-js-light-color);
+                        font-weight: 900;
+                        text-align: left;
+                        padding: var(--calendar-js-spacing);
+    
+                        div.right-divider-line {
+                            @include title-bar-divider-line;
+                        }
+    
+                        div.ib-arrow-expand-left-right,
+                        div.ib-plus,
+                        div.right-divider-line {
+                            float: right;
+                            margin-right: var(--calendar-js-spacing) !important;
+                            margin-left: 0 !important;
+                        }
+                    }
+                }
+
+                div.days {
+                    div.cell {
+                        padding-top: var(--calendar-js-spacing) !important;
+                        padding-bottom: var(--calendar-js-spacing) !important;
+                        padding-left: calc( var(--calendar-js-spacing) / 2 ) !important;
+                        padding-right: calc( var(--calendar-js-spacing) / 2 ) !important;
+                        position: relative;
+                        overflow: visible !important;
+                        transition: var(--calendar-js-transition);
+    
+                        div.events-count {
+                            position: absolute;
+                            font-size: var(--calendar-js-small-font-size) !important;
+                            padding-top: calc( var(--calendar-js-spacing) / 4 );
+                            padding-bottom: calc( var(--calendar-js-spacing) / 4 );
+                            padding-right: calc( var(--calendar-js-spacing) / 2 );
+                            padding-left: calc( var(--calendar-js-spacing) / 2 );
+                            color: var(--calendar-js-light-color);
+                            background-color: var(--calendar-js-dark-lighter-color);
+                            bottom: -4px;
+                            right: -4px;
+                            border-radius: 50%;
+                            z-index: 10;
+                        }
+                    }
+
+                    div.cell-today {
+                        background-color: var(--calendar-js-dark-color) !important;
+                        color: var(--calendar-js-light-color) !important;
+                    }
+
+                    div.has-events {
+                        background-color: rgba( 135, 206, 250, 0.4 );
+                    }
+        
+                    div.cell:not( .cell-no-click ):hover {
+                        cursor: pointer;
+                        background-color: var(--calendar-js-day-date-picker-hover-color);
+                    }
+        
+                    div.cell:not( .cell-no-click ):active {
+                        @include opacity-active-effect;
+                    }
+
+                    div.cell-muted span,
+                    div.cell-muted sup {
+                        opacity: 0.3;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - All Events View
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.all-events-view {
+        @include full-size-view-display;
+
+        @import "foundation/view-title-bar";
+
+        div.contents {
+            @include view-contents;
+
+            div.year-header {
+                margin-top: calc( var(--calendar-js-spacing) * 2 );
+
+                span.header-text {
+                    font-weight: 900;
+                    font-size: 22px;
+                    transition: var(--calendar-js-transition);
+
+                    &:hover {
+                        @include opacity-hover-effect;
+                    }
+            
+                    &:active {
+                        @include opacity-active-effect;
+                    }
+                }
+
+                div.line {
+                    margin-top: calc( var(--calendar-js-spacing) / 2 );
+                    border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+                    margin-bottom: var(--calendar-js-spacing);
+                }
+
+                &:first-of-type {
+                    margin-top: 0;
+                }
+            }
+
+            div.month {
+                border-radius: var(--calendar-js-border-radius);
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+                overflow: hidden;
+                margin-bottom: var(--calendar-js-spacing);
+
+                div.header {
+                    background-color: var(--calendar-js-dark-color) !important;
+                    color: var(--calendar-js-light-color) !important;
+                    padding: var(--calendar-js-spacing);
+                    font-weight: var(--calendar-js-title-bar-font-weight);
+
+                    div.right-divider-line {
+                        @include title-bar-divider-line;
+                    }
+
+                    div.ib-arrow-expand-left-right,
+                    div.ib-plus,
+                    div.ib-close,
+                    div.ib-minus,
+                    div.ib-square-hollow,
+                    div.right-divider-line {
+                        float: right;
+                        margin-left: var(--calendar-js-spacing);
+                    }
+                }
+
+                div.events {
+                    padding: var(--calendar-js-spacing);
+
+                    @import "foundation/view-event";
+                }
+
+                &:last-child {
+                    margin-bottom: var(--calendar-js-spacing-border-size) !important;
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Timeline View
+    -------------------------------------------------------------------------
+*/
+
+div.calendar {
+    div.timeline-view {
+        @include full-size-view-display;
+
+        @import "foundation/view-title-bar";
+
+        div.contents {
+            position: relative;
+            display: inline-block;
+            overflow-x: auto;
+            overflow-y: auto;
+            width: 100%;
+            padding: 0 !important;
+            white-space: nowrap;
+            vertical-align: top;
+
+            @media screen and ( min-width: $minimum-width ) {
+                height: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-large-font-size) ) );
+            }
+            
+            @media screen and ( max-width: $maximum-width ) {
+                height: calc( 100% - ( ( var(--calendar-js-spacing) * 2 ) + var(--calendar-js-small-font-size) ) );
+            }
+
+            div.timeline-column {
+                display: inline-block;
+                position: absolute;
+                top: 0;
+                padding-left: var(--calendar-js-spacing);
+                padding-right: var(--calendar-js-spacing);
+                height: 100%;
+                background-color: var(--calendar-js-light-color);
+                border-right: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+
+                @media screen and ( min-width: $minimum-width ) {
+                    width: var(--calendar-js-time-view-timeline-section-width);
+                }
+                
+                @media screen and ( max-width: $maximum-width ) {
+                    width: var(--calendar-js-time-view-timeline-section-width-small);
+                }
+                
+                &:nth-child( odd ) {
+                    background-color: var(--calendar-js-day-names-color);
+                }
+            }
+
+            div.timeline-header {
+                display: inline-block;
+                position: sticky;
+                border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+                top: 0;
+                vertical-align: top;
+                z-index: 2010;
+                
+                div.timeline-header-item {
+                    display: inline-block;
+                    padding: var(--calendar-js-spacing);
+                    text-align: center;
+                    border-right: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+                    background-color: var(--calendar-js-day-names-color);
+
+                    @media screen and ( min-width: $minimum-width ) {
+                        width: var(--calendar-js-time-view-timeline-section-width);
+                    }
+                    
+                    @media screen and ( max-width: $maximum-width ) {
+                        width: var(--calendar-js-time-view-timeline-section-width-small);
+                    }
+
+                    &:first-child {
+                        text-align: center;
+                        position: sticky;
+                        left: 0;
+                        z-index: 2000;
+                    }
+
+                    &:last-child {
+                        border-right: none;
+                    }
+
+                    div.ib-arrow-right-full {
+                        float: right;
+                        border-left-color: var(--calendar-js-dark-color);
+                    }
+
+                    div.ib-arrow-left-full {
+                        float: left;
+                        border-right-color: var(--calendar-js-dark-color);
+                    }
+                }
+            }
+
+            div.timeline-row {
+                float: left;
+                clear: both;
+                position: relative;
+                border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+
+                div.timeline-row-item,
+                div.timeline-row-item-spacing {
+                    display: inline-block;
+                    padding: var(--calendar-js-spacing);
+                    padding-top: calc( ( var(--calendar-js-spacing) * 2 ) );
+                    padding-bottom: calc( ( var(--calendar-js-spacing) * 2 ) );
+                    text-align: left;
+                    color: var(--calendar-js-light-color);
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    vertical-align: top;
+                    position: sticky;
+                    left: 0;
+                    z-index: 2002;
+
+                    @media screen and ( min-width: $minimum-width ) {
+                        width: var(--calendar-js-time-view-timeline-section-width);
+                    }
+                    
+                    @media screen and ( max-width: $maximum-width ) {
+                        width: var(--calendar-js-time-view-timeline-section-width-small);
+                    }
+
+                    &:last-child {
+                        border-right: none;
+                    }
+                }
+
+                div.timeline-row-item {
+                    border-right: var(--calendar-js-spacing-border-size) solid var(--calendar-js-grid-border-color);
+                    background-color: var(--calendar-js-dark-color);
+                }
+
+                div.timeline-row-item-odd {
+                    background-color: var(--calendar-js-light-color);
+                    color: var(--calendar-js-dark-color);
+                }
+
+                div.timeline-row-items {
+                    display: inline-block;
+                    vertical-align: top;
+                    position: relative;
+
+                    div.timeline-row-item-spacing {
+                        background-color: transparent !important;
+                        border-right: var(--calendar-js-spacing-border-size) solid transparent !important;
+                    }
+
+                    @import "foundation/view-event";
+
+                    div.event {
+                        position: absolute;
+                        margin-left: 0;
+                        margin-right: 0;
+                        top: calc( var(--calendar-js-spacing) );
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        z-index: 2001;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Event Editor
+    -------------------------------------------------------------------------
+*/
+
+div.event-editor {
+    @include dialog-styles( 420px );
+
+    div.tab-content {
+        height: 258px;
+        margin-bottom: calc( var(--calendar-js-spacing) * 2 );
+
+        div.split:last-of-type input {
+            margin-bottom: 0 !important;
+        }
+    }
+
+    div.view {
+        position: relative;
+
+        @include dialog-title-bar;
+
+        div.input-title-container {
+            display: flex;
+            margin-bottom: var(--calendar-js-spacing);
+
+            input[type="text"] {
+                flex-grow: 1;
+                margin-bottom: 0 !important;
+            }
+
+            input[type="button"] {
+                padding: .375rem .75rem;
+                margin-left: var(--calendar-js-spacing);
+                line-height: 0;
+            }
+        }
+        
+        div.contents {
+            padding: var(--calendar-js-spacing);
+        }
+        
+        input:not( [type="button"] ),
+        textarea {
+            @include input-fields;
+        }
+    
+        input:disabled,
+        textarea:disabled {
+            @include no-selection-allowed;
+            background-color: var(--calendar-js-light-color);
+            color: var(--calendar-js-input-border-color);
+        }
+    
+        textarea {
+            height: 90px;
+            resize: none;
+            max-height: none;
+        }
+
+        p {
+            @include no-selection-allowed;
+            margin: 0;
+            margin-bottom: 8px;
+        }
+    
+        @import "foundation/split-container";
+
+        div.buttons-container {
+            text-align: right;
+        }
+        
+        input[type="button"] {
+            @include dialog-button-styles;
+            @include button( add-update, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+            @include button( cancel, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+            @include button( remove, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+            @include button( select-colors, var(--calendar-js-light-color), var(--calendar-js-tertiary-button-color) );
+            @include button( repeat-options, var(--calendar-js-light-color), var(--calendar-js-tertiary-button-color) );
+
+            &.add-update,
+            &.cancel,
+            &.remove {
+                width: 100%;
+                max-width: 110px;
+                display: inline-block;
+                margin-left: var(--calendar-js-spacing);
+            }
+
+            &.remove {
+                margin-left: 0;
+                float: left;
+            }
+
+            &.select-colors,
+            &.repeat-options {
+                width: 50px;
+            }
+
+            &.repeat-options {
+                position: absolute;
+                margin: 0 !important;
+                bottom: 0;
+                right: 0;
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Event Editor - Select Colors
+    -------------------------------------------------------------------------
+*/
+
+div.event-editor-colors {
+    @include dialog-styles( 300px );
+    @include dialog-title-bar;
+    
+    div.contents {
+        padding: var(--calendar-js-spacing);
+
+        div.section {
+            @include advanced-options-container( 0 );
+            margin-left: 0;
+            margin-bottom: var(--calendar-js-spacing);
+
+            p {
+                @include no-selection-allowed;
+                margin: 0;
+                margin-bottom: 8px;
+            }
+        }
+    }
+    
+    input[type="color"],
+    input[type="text"] {
+        @include input-fields( 40px );
+    }
+
+    div.buttons-container {
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+        text-align: right;
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( update, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( cancel, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+
+        &.update,
+        &.cancel {
+            width: 100%;
+            max-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Event Editor - Repeat Options
+    -------------------------------------------------------------------------
+*/
+
+div.event-editor-repeat-options {
+    @include dialog-styles( 300px );
+    @include dialog-title-bar;
+    
+    div.contents {
+        padding: var(--calendar-js-spacing);
+
+        div.section {
+            @include advanced-options-container( 0 );
+            margin-left: 0;
+            margin-bottom: var(--calendar-js-spacing);
+
+            p {
+                @include no-selection-allowed;
+                margin: 0;
+                margin-top: 5px;
+                margin-bottom: 8px;
+    
+                &:first-child {
+                    margin-top: 0;
+                }
+            }
+        }
+    }
+
+    input:not( [type="button"] ),
+    textarea {
+        @include input-fields;
+    }
+
+    input[type="date"] {
+        margin-bottom: 0 !important;
+    }
+
+    label.checkbox {
+        margin-bottom: calc( var(--calendar-js-spacing) / 2 ) !important;
+    }
+
+    div.buttons-container {
+        text-align: right;
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( update, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( cancel, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+
+        &.update,
+        &.cancel {
+            width: 100%;
+            max-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Message
+    -------------------------------------------------------------------------
+*/
+
+div.message {
+    @include dialog-styles( 330px );
+    @include dialog-title-bar;
+
+    div.contents {
+        padding: var(--calendar-js-spacing);
+
+        div.text {
+            @include no-selection-allowed;
+            margin-bottom: var(--calendar-js-spacing);
+        }
+    }
+
+    label.checkbox {
+        margin-bottom: 0 !important;
+    }
+
+    div.buttons-container {
+        text-align: right;
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( yes-ok, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( no, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+
+        &.yes-ok,
+        &.no {
+            min-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Export Events
+    -------------------------------------------------------------------------
+*/
+
+div.export-events {
+    @include dialog-styles( 300px );
+    @include dialog-title-bar;
+
+    div.contents {
+        padding: var(--calendar-js-spacing);
+
+        input[type="text"] {
+            @include input-fields( 40px );
+        }
+
+        input:disabled {
+            @include no-selection-allowed;
+            background-color: var(--calendar-js-light-color);
+            color: var(--calendar-js-input-border-color);
+        }
+
+        div.options {
+            @include advanced-options-container( 0 );
+
+            div.split {
+                margin-top: 0;
+            }
+        }
+    }
+    
+    @import "foundation/split-container";
+
+    div.buttons-container {
+        text-align: right;
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( export, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( cancel, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+
+        &.export,
+        &.cancel {
+            width: 100%;
+            max-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Search
+    -------------------------------------------------------------------------
+*/
+
+div.search {
+    @include dialog-styles( 310px, false, 999 );
+    @include dialog-title-bar;
+
+    div.contents {
+        padding: var(--calendar-js-spacing);
+
+        div.history-container {
+            position: relative;
+            margin-bottom: var(--calendar-js-spacing);
+            overflow-y: visible;
+
+            div.ib-arrow-down-full,
+            div.ib-arrow-up-full {
+                position: absolute;
+                right: var(--calendar-js-spacing);
+                top: var(--calendar-js-spacing);
+                transition: none !important;
+            }
+
+            input {
+                margin-bottom: 0 !important;
+                padding-right: calc( 16px + ( var(--calendar-js-spacing) * 2 ) );
+            }
+
+            div.history-dropdown {
+                @include input-style;
+                background-color: var(--calendar-js-input-background-color);
+                position: absolute;
+                width: calc( 100% - 2px );
+                max-height: 200px;
+                z-index: 2000;
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color) !important;
+                box-shadow: 0 0 var(--calendar-js-input-box-shadow-size) var(--calendar-js-input-box-shadow-size) var(--calendar-js-dark-color);
+                display: none;
+                overflow-x: hidden;
+                overflow-y: auto;
+                margin-top: calc( var(--calendar-js-input-box-shadow-size) * 2 );
+
+                div.history-dropdown-item {
+                    padding: var(--calendar-js-spacing);
+                    border-bottom: 1px dotted var(--calendar-js-input-border-color);
+                    transition: var(--calendar-js-transition);
+
+                    span.search-search {
+                        font-weight: 900 !important;
+                    }
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    &:hover {
+                        background-color: var(--calendar-js-day-names-color);
+                        cursor: pointer;
+                    }
+            
+                    &:active {
+                        @include opacity-active-effect;
+                    }
+                }
+            }
+        }
+        
+        p {
+            @include no-selection-allowed;
+            margin: 0;
+            margin-bottom: 8px;
+        }
+
+        div.advanced {
+            @include advanced-options-container;
+
+            div.split {
+                margin-top: 0 !important;
+
+                div.checkbox-container {
+                    label.checkbox {
+                        margin-left: var(--calendar-js-spacing);
+                    }
+                }
+
+                div.radio-buttons-container {
+                    label.radio-button {
+                        margin-left: var(--calendar-js-spacing);
+                    }
+                }
+            }
+        }
+    }
+    
+    input[type="text"] {
+        @include input-fields;
+    }
+
+    @import "foundation/split-container";
+
+    div.buttons-container {
+        text-align: right;
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( next, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( previous, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+        
+        &.next,
+        &.previous {
+            width: 100%;
+            max-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+
+    div.ib-minus,
+    div.ib-square-hollow {
+        transition-property: opacity;
+        float: right;
+    }
+
+    div.ib-minus,
+    div.ib-square-hollow {
+        margin-right: var(--calendar-js-spacing);
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Configuration
+    -------------------------------------------------------------------------
+*/
+
+div.configuration {
+    @include dialog-styles( 400px );
+    @include dialog-title-bar;
+
+    div.contents {
+        padding: var(--calendar-js-spacing);
+        
+        p {
+            @include no-selection-allowed;
+            margin: 0;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            @include input-fields;
+        }
+
+        div.tab-content {
+            height: 135px;
+        }
+    }
+
+    div.buttons-container {
+        text-align: right;
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( update, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( cancel, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color));
+
+        &.update,
+        &.cancel {
+            width: 100%;
+            max-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Dialog - Jump To Date
+    -------------------------------------------------------------------------
+*/
+
+div.jump-to-date {
+    @include dialog-styles( 300px );
+    @include dialog-title-bar;
+
+    div.contents {
+        padding: var(--calendar-js-spacing);
+
+        input[type="date"] {
+            @include input-fields( 40px );
+        }
+
+        input:disabled {
+            @include no-selection-allowed;
+            background-color: var(--calendar-js-light-color);
+            color: var(--calendar-js-input-border-color);
+        }
+    }
+    
+    @import "foundation/split-container";
+
+    div.buttons-container {
+        text-align: right;
+        margin-top: calc( var(--calendar-js-spacing) * 2 );
+    }
+
+    input[type="button"] {
+        @include dialog-button-styles;
+        @include button( go, var(--calendar-js-light-color), var(--calendar-js-primary-button-color) );
+        @include button( cancel, var(--calendar-js-secondary-button-color), var(--calendar-js-light-color), var(--calendar-js-secondary-button-color) );
+
+        &.go,
+        &.cancel {
+            width: 100%;
+            max-width: 110px;
+            display: inline-block;
+            margin-left: var(--calendar-js-spacing);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Tabs
+    -------------------------------------------------------------------------
+*/
+
+div.calendar-dialog {
+    div.tab {
+        @include no-selection-allowed;
+        padding: var(--calendar-js-spacing);
+        border-top-left-radius: var(--calendar-js-border-radius);
+        border-top-right-radius: var(--calendar-js-border-radius);
+        border-bottom: none !important;
+        text-align: center;
+        display: inline-block;
+        margin-left: calc( var(--calendar-js-spacing) / 2 );
+        vertical-align: bottom;
+    }
+
+    div.tab-control-selected {
+        border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+        background-color: var(--calendar-js-dark-color);
+        color: var(--calendar-js-light-color);
+        padding: calc( var(--calendar-js-spacing) + ( var(--calendar-js-spacing) / 4 ) );
+    }
+
+    div.tab-control {
+        border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-input-border-color);
+        transition: var(--calendar-js-transition);
+        transition-property: opacity;
+
+        &:hover {
+            cursor: pointer;
+            border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+            background-color: var(--calendar-js-dark-color);
+            color: var(--calendar-js-light-color);
+        }
+
+        &:active {
+            @include opacity-active-effect( 0.7 );
+        }
+    }
+
+    div.tab-control,
+    div.tab-content {
+        background-color: #FAFAFA;
+        color: var(--calendar-js-dark-color);
+    }
+
+    div.tab-content {
+        @include fade-in-effect-animation( 0.5s );
+        border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-input-border-color);
+        border-radius: var(--calendar-js-border-radius);
+        padding: var(--calendar-js-spacing);
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - CheckBox
+    -------------------------------------------------------------------------
+*/
+
+div.calendar,
+div.calendar-dialog,
+div.calendar div.side-menu {
+    div.checkbox-container {
+        label.checkbox {
+            margin-bottom: calc( var(--calendar-js-spacing) / 2 ) !important;
+        }
+
+        div:last-child label.checkbox {
+            margin-bottom: 0 !important;
+        }
+    }
+
+    label.checkbox-tabbed-in {
+        margin-left: var(--calendar-js-input-checkbox-size-with-spacing);
+    }
+
+    label.checkbox-tabbed-down {
+        margin-top: 5px;
+    }
+
+    label.checkbox {
+        @include no-selection-allowed;
+        display: inline-block;
+        position: relative;
+        padding-left: var(--calendar-js-input-checkbox-size-with-spacing);
+        margin-bottom: var(--calendar-js-spacing);
+        color: var(--calendar-js-dark-color);
+
+        input {
+            display: none !important;
+
+            &:checked ~ span.check-mark {
+                background-color: var(--calendar-js-dark-color);
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+            }
+
+            &:checked ~ span.check-mark::before {
+                display: block;
+            }
+
+            &:disabled ~ span.check-mark,
+            &:disabled ~ span.text {
+                opacity: 0.5;
+            }
+            
+            &:disabled ~ span.check-mark {
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color) !important;
+            }
+        }
+
+        span.check-mark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 15px;
+            width: 15px;
+            background-color: var(--calendar-js-input-background-color);
+            border-radius: var(--calendar-js-border-radius);
+            border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-input-border-color);
+            transition: var(--calendar-js-transition);
+
+            &::before {
+                @include transform( rotate( 45deg ) );
+                content: "";
+                position: absolute;
+                display: none;
+                left: 4px;
+                top: 1px;
+                width: 4px;
+                height: 7px;
+                border: solid var(--calendar-js-light-color);
+                border-width: 0 3px 3px 0;
+            }
+        }
+
+        &:hover span.check-mark {
+            border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-input-hover-color);
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Radio Button
+    -------------------------------------------------------------------------
+*/
+
+div.calendar,
+div.calendar-dialog {
+    p.text-header {
+        font-weight: 700 !important;
+    }
+
+    div.radio-buttons-container {
+        position: relative;
+    }
+
+    div.radio-button-container {
+        margin-bottom: calc( var(--calendar-js-spacing) / 2 );
+
+        label.radio-button {
+            @include no-selection-allowed;
+            display: inline-block;
+            position: relative;
+            padding-left: 25px;
+            color: var(--calendar-js-dark-color);
+    
+            input {
+                display: none !important;
+    
+                &:checked ~ span.check-mark {
+                    background-color: var(--calendar-js-dark-color) !important;
+                    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color) !important;
+                }
+    
+                &:checked ~ span.check-mark::before {
+                    display: block;
+                }
+
+                &:disabled ~ span.check-mark,
+                &:disabled ~ span.text {
+                    opacity: 0.5;
+                }
+                
+                &:disabled ~ span.check-mark {
+                    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color) !important;
+                }
+            }
+    
+            span.check-mark {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 15px;
+                width: 15px;
+                background-color: var(--calendar-js-input-background-color);
+                border-radius: 50%;
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-input-border-color);
+                transition: var(--calendar-js-transition);
+    
+                &::before {
+                    @include transform( rotate( 45deg ) );
+                    content: "";
+                    position: absolute;
+                    display: none;
+                    left: 4px;
+                    top: 4px;
+                    width: 7px;
+                    height: 7px;
+                    background-color: var(--calendar-js-light-color);
+                    border-radius: 50%;
+                }
+            }
+
+            &:hover span.check-mark {
+                border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-input-hover-color);
+            }
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Tooltip
+    -------------------------------------------------------------------------
+*/
+
+div.calendar-tooltip,
+div.calendar-tooltip-event {
+    @include fade-in-effect-animation( 1s );
+    @include no-selection-allowed;
+    position: absolute;
+    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+    border-radius: var(--calendar-js-border-radius);
+    background-color: rgb( 240, 237, 199 );
+    color: var(--calendar-js-dark-color);
+    padding: var(--calendar-js-spacing);
+    display: none;
+    z-index: 2000;
+}
+
+div.calendar-tooltip {
+    font-size: smaller !important;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+div.calendar-tooltip-event {
+    width: 100%;
+    max-width: 300px;
+
+    @include div-label-spacing;
+
+    div.title {
+        font-weight: 900;
+        width: calc( 100% - 24px - var(--calendar-js-spacing) );
+    }
+
+    div.date,
+    div.duration,
+    div.description,
+    div.location,
+    div.repeats,
+    div.url {
+        font-size: smaller;
+    }
+
+    div.url {
+        span.url-text {
+            color: blue;
+
+            &:hover {
+                cursor: pointer;
+                text-decoration: underline;
+            }
+        }
+    }
+
+    div.ib-refresh-medium {
+        margin-right: calc( var(--calendar-js-spacing) / 2 );
+    }
+
+    div.title-buttons {
+        position: absolute !important;
+        right: var(--calendar-js-spacing);
+        top: var(--calendar-js-spacing);
+
+        div.ib-close,
+        div.ib-edit {
+            margin-left: calc( var(--calendar-js-spacing) / 2 );
+            float: right;
+
+            &::before,
+            &::after {
+                background-color: var(--calendar-js-dark-color);
+            }
+        }
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Context Menu
+    -------------------------------------------------------------------------
+*/
+
+div.calendar-context-menu {
+    @include no-selection-allowed;
+    @include fade-in-effect-animation( 0.5s );
+    background-color: var(--calendar-js-drop-down-menu-background-color);
+    border: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+    border-left: var(--calendar-js-spacing-border-left-size) solid var(--calendar-js-dark-color);
+    color: var(--calendar-js-dark-color);
+    box-shadow: var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-spacing-shadow-size) var(--calendar-js-dark-color);
+    border-radius: var(--calendar-js-border-radius);
+    white-space: nowrap;
+    overflow: hidden;
+    position: absolute;
+    display: none;
+    cursor: pointer !important;
+    z-index: 1000;
+
+    div.menu-text {
+        display: inline-block;
+    }
+
+    div.bold {
+        font-weight: 900;
+    }
+
+    div.ib-plus-icon,
+    div.ib-arrow-expand-left-right-icon,
+    div.ib-hamburger-side-icon,
+    div.ib-close-icon,
+    div.ib-arrow-top-right-icon,
+    div.ib-circle-hollow-icon,
+    div.ib-circle-icon,
+    div.ib-minus-icon,
+    div.ib-octagon-hollow-icon,
+    div.ib-pipe-icon,
+    div.ib-equals-icon,
+    div.ib-rhombus-hollow-icon,
+    div.ib-arrow-down-full-line-icon,
+    div.ib-arrow-up-full-line-share-icon,
+    div.ib-edit-icon {
+        margin-right: var(--calendar-js-spacing);
+        transition: none !important;
+    }
+
+    div.item {
+        padding: calc( var(--calendar-js-spacing) - calc( var(--calendar-js-spacing) / 5 ) );
+        padding-right: calc( var(--calendar-js-spacing) * 3 );
+        transition: var(--calendar-js-transition);
+
+        &:hover {
+            background-color: var(--calendar-js-dark-color);
+            color: var(--calendar-js-light-color);
+        }
+
+        &:hover div.ib-plus-icon::before,
+        &:hover div.ib-plus-icon::after,
+        &:hover div.ib-hamburger-side-icon::before,
+        &:hover div.ib-close-icon::before,
+        &:hover div.ib-close-icon::after,
+        &:hover div.ib-circle-icon,
+        &:hover div.ib-minus-icon::before,
+        &:hover div.ib-pipe-icon::before,
+        &:hover div.ib-equals-icon::before,
+        &:hover div.ib-equals-icon::after,
+        &:hover div.ib-arrow-down-full-line-icon::after,
+        &:hover div.ib-arrow-up-full-line-share-icon::after,
+        &:hover div.ib-edit-icon::before,
+        &:hover div.ib-edit-icon::after {
+            background-color: var(--calendar-js-light-color);
+        }
+
+        &:hover div.ib-hamburger-side-icon,
+        &:hover div.ib-arrow-expand-left-right-icon::after,
+        &:hover div.ib-arrow-expand-left-right-icon::before,
+        &:hover div.ib-arrow-top-right-icon,
+        &:hover div.ib-circle-hollow-icon,
+        &:hover div.ib-octagon-hollow-icon::before,
+        &:hover div.ib-octagon-hollow-icon::after,
+        &:hover div.ib-rhombus-hollow-icon::before,
+        &:hover div.ib-arrow-up-full-line-share-icon {
+            border-color: var(--calendar-js-light-color);
+        }
+
+        &:hover div.ib-arrow-down-full-line-icon::before {
+            border-top-color: var(--calendar-js-light-color);
+        }
+
+        &:hover div.ib-arrow-up-full-line-share-icon::before {
+            border-bottom-color: var(--calendar-js-light-color);
+        }
+
+        &:active {
+            @include opacity-active-effect;
+        }
+    }
+
+    div.separator {
+        border-bottom: var(--calendar-js-spacing-border-size) solid var(--calendar-js-dark-color);
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Custom Scroll Bar
+    -------------------------------------------------------------------------
+*/
+
+.custom-scroll-bars {
+    &::-webkit-scrollbar {
+        width: 12px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        -webkit-box-shadow: var(--calendar-js-scroll-bar-border-style);
+        box-shadow: var(--calendar-js-scroll-bar-border-style);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        -webkit-box-shadow: var(--calendar-js-scroll-bar-border-style);
+        box-shadow: var(--calendar-js-scroll-bar-border-style);
+        background: var(--calendar-js-light-color);
+
+        &:hover {
+            background-color: var(--calendar-js-drop-down-menu-background-color);
+        }
+
+        &:active {
+            background-color: #C0C0C0;
+        }
+    }
+}
+
+.dark-thumb-scroll {
+    &::-webkit-scrollbar-thumb {
+        background: var(--calendar-js-dark-lighter-color);
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Effects
+    -------------------------------------------------------------------------
+*/
+
+@keyframes fade-in-effect {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes focused-event-effect {
+    0% {
+        box-shadow: 0 0 0 0 var(--calendar-js-alert-color);
+        box-shadow: 0 0 0 0 rgba( 198, 0, 0, 0.5 );
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px var(--calendar-js-alert-color);
+        box-shadow: 0 0 0 10px rgba( 198, 0, 0, 0 );
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 var(--calendar-js-alert-color);
+        box-shadow: 0 0 0 0 rgba( 198, 0, 0, 0 );
+    }
+}
+
+
+/*
+    -------------------------------------------------------------------------
+    Calendar.js - Buttons
+    -------------------------------------------------------------------------
+*/
+
+@import "foundation/buttons/arrow-left-full";
+@import "foundation/buttons/pin";
+@import "foundation/buttons/refresh";
+@import "foundation/buttons/search";
+@import "foundation/buttons/hamburger";
+@import "foundation/buttons/hamburger-side";
+@import "foundation/buttons/eye";
+@import "foundation/buttons/arrow-down-full-line";
+@import "foundation/buttons/plus";
+@import "foundation/buttons/arrow-right-full";
+@import "foundation/buttons/minus";
+@import "foundation/buttons/square-hollow";
+@import "foundation/buttons/close";
+@import "foundation/buttons/arrow-expand-left-right";
+@import "foundation/buttons/arrow-contract-left-right";
+@import "foundation/buttons/octagon-hollow";
+@import "foundation/buttons/rewind";
+@import "foundation/buttons/forward";
+@import "foundation/buttons/arrow-down-full";
+@import "foundation/buttons/arrow-up-full";
+@import "foundation/buttons/square";
+@import "foundation/buttons/arrow-up-full-line";
+@import "foundation/buttons/expand";
+@import "foundation/buttons/hourglass";
+@import "foundation/buttons/bar-graph";
+@import "foundation/buttons/edit";
+@import "foundation/buttons/arrow-right-full-line";
+@import "foundation/menus/plus-icon";
+@import "foundation/menus/hamburger-icon";
+@import "foundation/menus/hamburger-side-icon";
+@import "foundation/menus/arrow-expand-left-right-icon";
+@import "foundation/menus/close-icon";
+@import "foundation/menus/arrow-top-right-icon";
+@import "foundation/menus/circle-icon";
+@import "foundation/menus/circle-hollow-icon";
+@import "foundation/menus/minus-icon";
+@import "foundation/menus/octagon-hollow-icon";
+@import "foundation/menus/pipe-icon";
+@import "foundation/menus/equals-icon";
+@import "foundation/menus/rhombus-hollow-icon";
+@import "foundation/menus/arrow-down-full-line-icon";
+@import "foundation/menus/arrow-up-full-line-share-icon";
+@import "foundation/menus/edit-icon";
+@import "foundation/small/refresh-medium";
+@import "foundation/small/refresh-small";
+@import "foundation/small/arrow-down-full-medium";
+@import "foundation/small/arrow-up-full-medium";

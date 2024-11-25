@@ -1,0 +1,7 @@
+@import "button";
+
+.ib-square {
+    @include button-no-before-after;
+    background-color: $button-color;
+    border-radius: $border-radius;
+}

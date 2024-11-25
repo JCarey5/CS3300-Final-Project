@@ -164,13 +164,41 @@ app.get('/manager_dashboard', (req, res) => {
 
 app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
-    const userOrganization = req.user ? req.user.organization : null;
-    const userObject = {
-      organization: userOrganization
-    }
-    res.render('ScheduleEmployee', userObject)
-    
-  } else {
+    const organization = req.user ? req.user.organization : null;
+
+    db.query('SELECT event_data FROM users WHERE id = 2', (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).send('Internal server error'); // Handle errors gracefully
+      }
+
+      if (results.length === 0) {
+        console.log('No data found for user id = 1');
+        return res.status(404).send('No data found');
+      }
+      // Assuming events_data is the BLOB column
+      var eventData = results[0].event_data;
+      
+      // Convert BLOB binary data to string
+      //var jsonData = JSON.parse(eventData);
+      //console.log(jsonData);
+      
+
+      // Parse JSON if it's valid JSON data
+      try {
+        
+        //console.log(events); // Now you have the events data as a JSON object
+
+        
+        // Render the page and pass the events data to the view
+        res.render('ScheduleEmployee', { organization, eventData: eventData });
+
+      } catch (e) {
+        console.error('Invalid JSON data:', e);
+        res.status(400).send('Invalid JSON data in database');
+      }
+    }); 
+    } else {
     res.redirect('/');
   }
 })
@@ -200,6 +228,34 @@ app.get('/add_employee', (req, res) => {
   }
 })
 
+app.use(bodyParser.json());
+app.post('/schedule_employee', (req, res) => {
+  // Assuming 'calendarInstance1' is your calendar instance
+    // Retrieve all events from the calendar
+    var eventJason = JSON.stringify(req.body);
+    console.log(eventJason);
+    
+    const userID = req.user.id;
+        
+    
+
+    // Send the event data to the server to store it in MySQL
+    db.promise().execute(
+        'UPDATE users SET event_data = ? WHERE id = ?',
+        [eventJason, userID]
+    )
+    .then(() => {
+      // On success, send a response back to the client
+      res.status(200).json({ message: 'Events successfully exported to database!' });
+     })
+    .catch(error => {
+      console.error('Error exporting events:', error);
+
+      // Send a response with an error status and message
+      res.status(500).json({ message: 'There was an error exporting events.', error: error.message });
+    });
+
+});
 
 // POST route to add employee to an organization
 app.post('/add_employee', (req, res) => {

@@ -1,0 +1,23 @@
+@import "button";
+
+.ib-search {
+    @include button;
+    
+    &::before {
+        border: $border;
+        width: ( calc( $size / 2 ) + calc( $size / 4 ) ) - $border-width * 2;
+        height: ( calc( $size / 2 ) + calc( $size / 4 ) ) - $border-width * 2;
+        border-radius: 50%;
+        left: 0;
+        top: 0;
+    }
+
+    &::after {
+        @include transform-rotate( -45deg );
+        width: $border-width;
+        height: calc( $size / 2 );
+        background-color: $button-color;
+        right: $border-width - calc( $border-width / 3 );
+        bottom: calc( $border-width / 6 );
+    }
+}

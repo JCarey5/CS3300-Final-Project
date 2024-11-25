@@ -28,5 +28,27 @@
             <p>You are not currently part of an organization.</p>
         <% } %>
 
-        
+        <div class="contents">
+            <div id="calendar" data-binding-calendar='{ "views": { "fullMonth": { "showExtraTitleBarButtons": false } } }'></div>
+            
+        </div>
+
         </body>
+
+        <script type = "text/javascript" src="/public/calendar.js"></script>
+        <script>
+            var calendarInstance1 = new calendarJs( "calendar", {
+              views: { fullMonth: { "showExtraTitleBarButtons": false } },
+              manualEditingEnabled: false,
+    
+            } );
+
+            var event1 = {
+                from: new Date(),
+                to: new Date(),
+                title: "New Event 1",
+                description: "SHIFT"
+            }
+            calendarInstance1.addEvent( event1 )
+        </script>
+        </html>

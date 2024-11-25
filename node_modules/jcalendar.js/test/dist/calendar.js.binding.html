@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Calendar.js - Data-Binding</title>
+        <link rel="stylesheet" href="../css/styles.css">
+        <link rel="stylesheet" href="../../dist/calendar.js.css">
+        <script src="../../dist/calendar.js"></script>
+        <script src="../../dist/calendar.binding.js"></script>
+    </head>
+
+    <body>
+        <div class="header">
+            <h1 id="header">Calendar.js - Data-Binding</h1>
+            <p>A test that shows Calendar.js working when DOM element attribute bindings are used.</p>
+        </div>
+
+        <div class="contents date-picker">
+            <input type="text" id="calendar1" value="01/05/2022" data-binding-calendar='{ "views": { "datePicker": { "maximumDate": new Date() } } }' />
+        </div>
+        <br>
+
+        <div class="contents">
+            <div id="calendar2" style="max-width: 800px;" data-binding-calendar='{ "views": { "fullMonth": { "showExtraTitleBarButtons": true } } }'>
+                <p>Some data that should be cleared.</p>
+            </div>
+        </div>
+
+        <div class="contents">
+            <div id="calendar3" style="max-width: 800px;" data-binding-calendar='{ "views": { "fullMonth": { "showExtraTitleBarButtons": false } } }'>
+                <p>Some data that should be cleared.</p>
+            </div>
+        </div>
+
+        <div class="contents">
+            <h2>Additional Data:</h2>
+            <button onclick="console.log( $calendar.instance( 'calendar1' ).getVersion() );">Get Version (1)</button>
+            <button onclick="console.log( $calendar.instance( 'calendar2' ).getVersion() );">Get Version (2)</button>
+            <button onclick="console.log( $calendar.instance( 'calendar3' ).getVersion() );">Get Version (3)</button>
+        </div>
+
+        <script>
+            var calendarInstance = new calendarJs();
+
+            document.title += " - v" + calendarInstance.getVersion();
+            document.getElementById( "header" ).innerText += " - v" + calendarInstance.getVersion();
+
+            calendarInstance.destroy();
+        </script>
+    </body>
+</html>

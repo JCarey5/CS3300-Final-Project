@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Calendar.js - Pin-Up</title>
+        <link rel="stylesheet" href="../css/styles.css">
+        <link rel="stylesheet" href="../../dist/calendar.js.css">
+        <script src="../../dist/calendar.js"></script>
+    </head>
+
+    <body>
+        <div class="header">
+            <h1 id="header">Calendar.js - Pin-Up</h1>
+            <p>A test that shows Calendar.js in Pin-Up mode.</p>
+        </div>
+
+        <div class="contents">
+            <div id="calendar" style="max-width: 800px;"></div>
+        </div>
+    </body>
+
+    <script>
+        var calendarInstance = new calendarJs( "calendar", {
+            views: {
+                fullMonth: {
+                    isPinUpViewEnabled: true,
+                    pinUpViewImageUrls: [
+                        "https://calendar-js.com/images/top.jpg",
+                        "https://sleeplessocean.com/images/background.jpg"
+                    ]
+                }
+            }
+        } );
+
+        document.title += " v" + calendarInstance.getVersion();
+        document.getElementById( "header" ).innerText += " - v" + calendarInstance.getVersion();
+    </script>
+</html>

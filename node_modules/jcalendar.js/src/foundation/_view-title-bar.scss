@@ -1,0 +1,105 @@
+@import "styles";
+
+div.title-bar {
+    width: calc( 100% - var(--calendar-js-spacing) );
+    display: inline-block;
+    padding-top: var(--calendar-js-spacing);
+    padding-bottom: var(--calendar-js-spacing);
+    padding-left: calc( var(--calendar-js-spacing) / 2 );
+    padding-right: calc( var(--calendar-js-spacing) / 2 );
+    background-color: var(--calendar-js-dark-color);
+    color: var(--calendar-js-title-bar-text-color);
+    text-align: center;
+
+    div.left-divider-line,
+    div.left-divider-line-events,
+    div.right-divider-line,
+    div.right-divider-line-full-screen-mode,
+    div.right-divider-line-views {
+        @include title-bar-divider-line;
+    }
+
+    div.left-divider-line,
+    div.left-divider-line-events {
+        float: left;
+    }
+
+    div.right-divider-line,
+    div.right-divider-line-full-screen-mode,
+    div.right-divider-line-views {
+        float: right;
+    }
+
+    div.title {
+        font-weight: 900 !important;
+        display: inline-block;
+        
+        @media screen and ( max-width: $maximum-width ) {
+            margin-top: 2px;
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    div {
+        margin-left: calc( var(--calendar-js-spacing) / 2 ) !important;
+        margin-right: calc( var(--calendar-js-spacing) / 2 ) !important;
+    }
+
+    div.ib-arrow-left-full,
+    div.ib-pin,
+    div.ib-refresh,
+    div.ib-search,
+    div.ib-octagon-hollow,
+    div.ib-hamburger,
+    div.ib-arrow-right-full-line {
+        float: left;
+    }
+
+    div.ib-arrow-down-full-line,
+    div.ib-plus,
+    div.ib-close,
+    div.ib-bar-graph,
+    div.ib-arrow-right-full,
+    div.ib-hourglass,
+    div.ib-arrow-expand-left-right,
+    div.ib-arrow-contract-left-right {
+        float: right;
+    }
+
+    @media screen and ( min-width: $minimum-width ) {
+        div.ib-arrow-down-full-line,
+        div.ib-arrow-expand-left-right,
+        div.ib-arrow-contract-left-right,
+        div.ib-search,
+        div.ib-refresh,
+        div.ib-octagon-hollow,
+        div.ib-bar-graph,
+        div.ib-hourglass,
+        div.right-divider-line-full-screen-mode,
+        div.right-divider-line-views,
+        div.ib-arrow-right-full-line,
+        div.left-divider-line-events {
+            display: inline-block;
+        }
+    }
+    
+    @media screen and ( max-width: $maximum-width ) {
+        div.ib-arrow-down-full-line,
+        div.ib-arrow-expand-left-right,
+        div.ib-arrow-contract-left-right,
+        div.ib-search,
+        div.ib-refresh,
+        div.ib-octagon-hollow,
+        div.ib-bar-graph,
+        div.ib-hourglass,
+        div.right-divider-line-full-screen-mode,
+        div.right-divider-line-views,
+        div.ib-arrow-right-full-line,
+        div.left-divider-line-events {
+            display: none !important;
+        }
+    }
+}
