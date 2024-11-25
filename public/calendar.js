@@ -13947,7 +13947,7 @@ function calendarJs( elementOrId, options, searchOptions ) {
         _options.fromText = getDefaultAnyString( _options.fromText, "From:" );
         _options.toText = getDefaultAnyString( _options.toText, "To:" );
         _options.isAllDayText = getDefaultAnyString( _options.isAllDayText, "Is All-Day" );
-        _options.titleText = getDefaultAnyString( _options.titleText, "Title:" );
+        _options.titleText = getDefaultAnyString( _options.titleText, "Employee:" );
         _options.descriptionText = getDefaultAnyString( _options.descriptionText, "Description:" );
         _options.locationText = getDefaultAnyString( _options.locationText, "Location:" );
         _options.addText = getDefaultAnyString( _options.addText, "Add" );
