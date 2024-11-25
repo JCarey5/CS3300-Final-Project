@@ -25,6 +25,8 @@
  * 
  * @returns     {Object}                                                The Calendar.js instance.
  */
+const db = require('./db'); // Import the database connection
+
 function calendarJs( elementOrId, options, searchOptions ) {
     var _that = this,
 
@@ -5882,6 +5884,8 @@ function calendarJs( elementOrId, options, searchOptions ) {
     }
 
     function buildEventEditorEventTabContent() {
+        //var employee_list = [];
+        
         createTextHeaderElement( _element_Dialog_EventEditor_Tab_Event, _options.titleText );
 
         var inputTitleContainer = createElement( "div", "input-title-container" );
