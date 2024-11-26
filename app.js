@@ -233,31 +233,82 @@ app.get('/add_employee', (req, res) => {
 app.use(bodyParser.json());
 app.post('/schedule_employee', (req, res) => {
   // Assuming 'calendarInstance1' is your calendar instance
-    // Retrieve all events from the calendar
-    var eventJason = JSON.stringify(req.body);
-    console.log(eventJason);
-    
-    const userID = req.user.id;
-        
-    
+  // Retrieve all events from the calendar
+  const organization_id = req.user ? req.user.organization_id : null;
 
-    // Send the event data to the server to store it in MySQL
-    db.promise().execute(
-        'UPDATE users SET event_data = ? WHERE id = ?',
-        [eventJason, userID]
-    )
-    .then(() => {
-      // On success, send a response back to the client
-      res.status(200).json({ message: 'Events successfully exported to database!' });
-     })
-    .catch(error => {
-      console.error('Error exporting events:', error);
+  // Query the employees from the database based on the organization_id
+  db.query('SELECT id, first_name, last_name FROM users WHERE organization_id = ?', [organization_id], (err, results) => {
+      if (err) {
+          console.error('Database query error:', err);
+          return res.status(500).send('Internal server error'); // Handle errors gracefully
+      }
 
-      // Send a response with an error status and message
-      res.status(500).json({ message: 'There was an error exporting events.', error: error.message });
-    });
+      if (results.length === 0) {
+          console.log('No data found for user id = 1');
+          return res.status(404).send('No data found');
+      }
 
+      // Assuming results contain employee data; map to an array of employees
+      const employees = results.map(employee => {
+          return {
+              id: employee.id,
+              fullName: `${employee.first_name} ${employee.last_name}`
+          };
+      });
+
+      console.log('Employees:', employees);  // Logs the employees array
+
+      // Now, process the events data from the request
+      var eventJson = req.body;
+      console.log('Event JSON:', eventJson); // Logs the event JSON data
+
+      const userID = req.user.id;
+
+      employees.forEach(employee => {
+        // Filter events for the current employee based on matching the title with the employee's full name
+        const employeeEvents = eventJson.filter(event => {
+            return event.title && event.title.includes(employee.fullName);  // Check if the title contains the employee's full name
+        });
+
+        if (employeeEvents.length > 0) {
+            // Prepare the events to be updated for the current employee in the database
+            console.log(employeeEvents)
+            const employeeEventData = JSON.stringify(employeeEvents);
+
+            // Update the employee's record in the database
+            db.promise().execute(
+                'UPDATE users SET event_data = ? WHERE id = ?',
+                [employeeEventData, employee.id]
+            )
+            .then(() => {
+                console.log(`Events for ${employee.fullName} successfully updated.`);
+            })
+            .catch(error => {
+                console.error('Error exporting events for employee:', employee.fullName, error);
+            });
+        } else {
+            console.log(`No events found for ${employee.fullName}`);
+          }
+      });
+
+      // Send the event data to the database (for the current user)
+      db.promise().execute(
+          'UPDATE users SET event_data = ? WHERE id = ?',
+          [eventJson, userID]
+      )
+      .then(() => {
+          // On success, send a response back to the client
+          res.status(200).json({ message: 'Events successfully exported to database!' });
+      })
+      .catch(error => {
+          console.error('Error exporting events:', error);
+
+          // Send a response with an error status and message
+          res.status(500).json({ message: 'There was an error exporting events.', error: error.message });
+      });
+  });
 });
+
 
 // POST route to add employee to an organization
 app.post('/add_employee', (req, res) => {
