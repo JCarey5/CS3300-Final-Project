@@ -150,9 +150,11 @@ app.get('/manager_dashboard', (req, res) => {
   if (req.isAuthenticated()) {
     const userFirstName = req.user ? req.user.first_name : null;
     const userOrganization = req.user ? req.user.organization : null;
+    const userAdmin = req.user ? req.user.organization_admin : null;
     const userObject = {
       firstName: userFirstName,
-      organization: userOrganization
+      organization: userOrganization,
+      isAdmin: userAdmin
     }
     res.render('ManagerDashBoard', userObject)
     
@@ -165,6 +167,7 @@ app.get('/manager_dashboard', (req, res) => {
 app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
     const user_id = req.user ? req.user.id : null;
+    const isAdmin = req.user ? req.user.organization_admin : null;
     console.log(user_id)
     const organization = req.user ? req.user.organization : null;
 
@@ -193,7 +196,7 @@ app.get('/schedule_employee', (req, res) => {
 
         
         // Render the page and pass the events data to the view
-        res.render('ScheduleEmployee', { organization, eventData: eventData });
+        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
 
       } catch (e) {
         console.error('Invalid JSON data:', e);
@@ -209,10 +212,12 @@ app.get('/schedule_employee', (req, res) => {
 app.get('/view_requests', (req, res) => {
   if (req.isAuthenticated()) {
     const userOrganization = req.user ? req.user.organization : null;
+    const isAdmin = req.user ? req.user.organization_admin : null;
     const userObject = {
-      organization: userOrganization
+      organization: userOrganization,
+      isAdmin: isAdmin
     }
-    res.render('ViewEmployeeRequests', userObject)
+    res.render('view_requests', userObject)
     
   } else {
     res.redirect('/');
@@ -223,7 +228,8 @@ app.get('/view_requests', (req, res) => {
 app.get('/add_employee', (req, res) => {
   if (req.isAuthenticated()) {
     const organization = req.user ? req.user.organization : null;
-    res.render('add_employee', { organization, messages: req.flash()})
+    const isAdmin = req.user ? req.user.organization_admin : null;
+    res.render('add_employee', { isAdmin, organization, messages: req.flash()})
     
   } else {
     res.redirect('/');
@@ -386,6 +392,7 @@ app.get('/remove_employee', (req, res) => {
   }
 
   const loggedInUserId = req.user.id; // Logged-in user’s ID (retrieved from session)
+  const isAdmin = req.user ? req.user.organization_admin : null;
 
   // Step 1: Fetch the logged-in user's organization_id from the database
   db.promise().execute('SELECT organization_id FROM users WHERE id = ?', [loggedInUserId])
@@ -410,11 +417,11 @@ app.get('/remove_employee', (req, res) => {
         .then(([users]) => {
           if (users.length === 0) {
             req.flash('info', 'No employees found in your organization.');
-            return res.render('remove_employee', { organization, employees: [], messages: req.flash()  });
+            return res.render('remove_employee', { isAdmin, organization, employees: [], messages: req.flash()  });
           }
 
           // Step 3: Render the employee list with a delete button
-          res.render('remove_employee', { organization, employees: users, messages: req.flash() });
+          res.render('remove_employee', { isAdmin, organization, employees: users, messages: req.flash() });
         })
         .catch(err => {
           console.error(err);
@@ -512,6 +519,7 @@ app.get('/view_employee', (req, res) => {
     //res.render('view_employee', {messages: req.flash()})
 
     const loggedInUserId = req.user.id; // Logged-in user’s ID (retrieved from session)
+    const isAdmin = req.user ? req.user.organization_admin : null;
     
 
     // Step 1: Fetch the logged-in user's organization_id from the database
@@ -535,13 +543,13 @@ app.get('/view_employee', (req, res) => {
           .then(([users]) => {
             if (users.length === 0) {
               req.flash('info', 'No employees found in your organization.');
-              return res.render('view_employee', { organization, employees: [], 
+              return res.render('view_employee', { isAdmin, organization, employees: [], 
                 messages: req.flash()
               });
             }
 
             // Step 3: Render the employees' list in the view
-            res.render('view_employee', { organization, employees: users,
+            res.render('view_employee', { isAdmin, organization, employees: users,
               messages: req.flash()
              });
           })
@@ -573,9 +581,10 @@ app.get('/view_employee', (req, res) => {
 
 
 app.get('/create_org', (req, res) => {
+  const isAdmin = req.user ? req.user.organization_admin : null;
   if (req.isAuthenticated()) {
     
-    res.render('create-organization', {
+    res.render('create-organization', {isAdmin,
       info: req.flash()})
     
   } else {
@@ -584,17 +593,6 @@ app.get('/create_org', (req, res) => {
 })
 
 
-
-// Form Validation Helper Function
-const validateOrganizationName = (organizationName) => {
-  const errors = [];
-  if (!organizationName || organizationName.trim().length === 0) {
-      errors.push('Organization name cannot be empty.');
-  } else if (organizationName.length < 3) {
-      errors.push('Organization name must be at least 3 characters long.');
-  }
-  return errors;
-};
 
 
 

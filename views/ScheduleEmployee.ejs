@@ -14,14 +14,20 @@
             <div class="logoimg">
                 <img src="MinuteToManage.png" />
             </div>
-            <a href="/manager_dashboard">Dashboard</a>
-            <a href="/schedule_employee">Schedule Employee</a>
-            <a href="/view_requests">Employee Requests</a>
-            <a href="/add_employee">Add Employee</a>
-            <a href="/remove_employee">Remove Employee</a>
-            <a href="/view_employee">View Employees</a>
-            <a href="/create_org">Create An Organization</a>
-            <a href="/logout">Logout</a>
+            <% if (isAdmin) { %>
+                <a href="/manager_dashboard">Dashboard</a>
+                <a href="/schedule_employee">Schedule Employee</a>
+                <a href="/view_requests">Employee Requests</a>
+                <a href="/add_employee">Add Employee</a>
+                <a href="/remove_employee">Remove Employee</a>
+                <a href="/view_employee">View Employees</a>
+                <a href="/create_org">Create An Organization</a>
+                <a href="/logout">Logout</a>
+            <% } else { %>
+                <!-- Links for non-admin users -->
+                <a href="/view_employee">View Employees</a>
+                <a href="/logout">Logout</a>
+            <% } %>
         </div>
 
 

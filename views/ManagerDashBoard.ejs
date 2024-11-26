@@ -15,14 +15,23 @@
             <div class="logoimg">
                 <img src="MinuteToManage.png" />
             </div>
-            <a href="/manager_dashboard">Dashboard</a>
-            <a href="/schedule_employee">Schedule Employee</a>
-            <a href="/view_requests">Employee Requests</a>
-            <a href="/add_employee">Add Employee</a>
-            <a href="/remove_employee">Remove Employee</a>
-            <a href="/view_employee">View Employees</a>
-            <a href="/create_org">Create An Organization</a>
-            <a href="/logout">Logout</a>
+            <!-- Conditional links based on admin role -->
+            <% if (isAdmin) { %>
+                <a href="/manager_dashboard">Dashboard</a>
+                <a href="/schedule_employee">Schedule Employee</a>
+                <a href="/view_requests">Employee Requests</a>
+                <a href="/add_employee">Add Employee</a>
+                <a href="/remove_employee">Remove Employee</a>
+                <a href="/view_employee">View Employees</a>
+                
+                <a href="/logout">Logout</a>
+            <% } else { %>
+                <!-- Links for non-admin users -->
+                <a href="/manager_dashboard">Dashboard</a>
+                <a href="/view_employee">View Employees</a>
+                <a href="/logout">Logout</a>
+            <% } %>
+            
         </div>
 
         <!-- Check if organization exists and display accordingly -->
@@ -42,18 +51,20 @@
 
         
         <script>
+        if(organization)
+        {
             var calendarInstance1 = new calendarJs( "calendar", {
               views: { fullMonth: { "showExtraTitleBarButtons": false } },
               manualEditingEnabled: false,
     
             } );
+        }
+        else
+        {
+            <a href="/create_org">Create An Organization</a>
+        }
+            
 
-            var event1 = {
-                from: new Date(),
-                to: new Date(),
-                title: "New Event 1",
-                description: "SHIFT"
-            }
-            calendarInstance1.addEvent( event1 )
+           
         </script>
         </html>
