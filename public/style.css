@@ -1,6 +1,6 @@
 
 
-
+/*General body styling*/
 body {
     font-family: 'Book Antiqua';
     background-color: #D8C6C0; 
@@ -8,7 +8,9 @@ body {
     line-height: 1.6;
     align-items: center;
     justify-content: center;
+
 }
+/*Styling for the form container for each page*/
 .form-container {
     
     max-width: 900px;
@@ -19,6 +21,7 @@ body {
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
     text-align: center;
 }
+/*Styling for the input fields - email and password*/
 .form-group input[type="email"],
 .form-group input[type="password"] {
     width: 95%;
@@ -30,12 +33,17 @@ body {
     outline: none;
 }
 
+/*Boarder color for the input fields email and password*/
 .form-group input[type="email"]:focus,
 .form-group input[type="password"]:focus {
     border-color: #90AEAD;
 }
+.form-group input[type="checkbox"] {
+    margin-left: 10px;
+    transform: scale(1.2);  /* Slightly larger checkbox */
+}
 
-
+/*Styling for the heading*/
 h1 {
     color: #333;
     margin-bottom: 20px;
@@ -43,6 +51,7 @@ h1 {
 }
 
 /* Form Group for Create Org */
+
 .form-group {
     margin-bottom: 25px;
     text-align: left;
@@ -57,7 +66,7 @@ h1 {
         color: #333;
     }
 
-    /* Input  Boxes*/
+    /* Input boxes in the forms*/
     .form-group input[type="text"],
     .form-group input[type="time"] {
         width: 95%;
@@ -75,7 +84,7 @@ h1 {
             border-color: #90AEAD;
         }
 
-  
+    /*Submit button*/
     .form-group button {
         background-color: #244855;
         color: white;
@@ -87,13 +96,13 @@ h1 {
         width: 100%;
         
     }
-
+        /*Submit button when hovering*/
         .form-group button:hover {
             background-color: #90AEAD;
         }
 
 
-
+        /*Sign up button*/
         .signup-button {
             background-color: #D8C6C0;
             color: #333;
@@ -105,7 +114,7 @@ h1 {
             width: 100%;
             margin-top: 10px;
         }
-        
+        /*Sign up button when hovering*/
         .signup-button:hover {
             background-color: #e0e0e0;
         }
@@ -182,6 +191,7 @@ h1 {
         
     }
 
+    /*Make sure the dropdown menu is centered within the dropdown*/
 .dropdown-content {
     display: none;
     position: absolute;
@@ -195,6 +205,7 @@ h1 {
     .dropdown-content a {
         float: none;
         color: #333;
+        background-color: #d8c6c0;
         padding: 12px 16px;
         text-decoration: none;
         display: block;
@@ -212,12 +223,27 @@ h1 {
     display: block;
 }
 
+/* Container for logo and text */
+.logo-container {
+    text-align: center; /* Center the logo and text */
+    margin-top: 20px; /* Add space above the container */
+}
+
+/* Styling for the logo image */
 .logoimg img {
-    width: 70px;  /* Adjust size as needed */
+    width: 70px;
     height: 50px;
 }
 
-/* Coworkers Table Styling */
+/* Styling for the logo text */
+.logo-text {
+   
+    font-size: 12px; /* Set the font size for the text */
+    font-weight: bold;
+    color:#d8c6c0;
+}
+
+/* Coworkers table styling */
 .coworkers-table {
     width: 100%;
     max-width: 700px;
@@ -247,7 +273,7 @@ h1 {
 
 
 
-/* Dropped Shifts Table Styling (optional) */
+/* Styling for dropped shifts table */
 .dropped-shifts-table {
     width: 100%;
     max-width: 700px;
@@ -274,5 +300,62 @@ h1 {
 
 .dropped-shifts-table tbody tr:hover {
     background-color: #e0e0e0;
+}
+
+/* Table Styling for Requests */
+.requests-table {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    font-size: 16px;
+    text-align: left;
+    background-color: #f9f3f1;
+}
+
+.requests-table th, .requests-table td {
+    padding: 12px 15px;
+    border: 1px solid #D8C6C0;
+}
+
+.requests-table th {
+    background-color: #244855;
+    color: #F9F3F1;
+}
+
+.requests-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.requests-table tbody tr:hover {
+    background-color: #e0e0e0;
+}
+
+/* Buttons for Accept and Deny */
+.accept-btn, .deny-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+}
+
+.accept-btn {
+    background-color: #244855;
+    color: white;
+}
+
+.accept-btn:hover {
+    background-color: #45a049;
+}
+
+.deny-btn {
+    background-color: #244855;
+    color: white;
+}
+
+.deny-btn:hover {
+    background-color: #e53935;
 }
 

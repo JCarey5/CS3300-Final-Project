@@ -164,11 +164,11 @@ app.get('/manager_dashboard', (req, res) => {
 
 app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
-    const organization_id = req.user ? req.user.organization_id : null;
-    console.log(organization_id)
+    const user_id = req.user ? req.user.id : null;
+    console.log(user_id)
     const organization = req.user ? req.user.organization : null;
 
-    db.query('SELECT event_data FROM users WHERE organization_id = ?', [organization_id],  (err, results) => {
+    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
       if (err) {
         console.error('Database query error:', err);
         return res.status(500).send('Internal server error'); // Handle errors gracefully
