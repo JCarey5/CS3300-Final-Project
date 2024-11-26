@@ -402,7 +402,7 @@ app.get('/remove_employee', (req, res) => {
 
       if (!organizationId) {
         req.flash('error', 'You are not assigned to any organization.');
-        return res.redirect('/remove_employee');
+        //return res.redirect('/remove_employee');
       }
 
       // Step 2: Search for all employees in the same organization
