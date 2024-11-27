@@ -151,16 +151,46 @@ app.get('/manager_dashboard', (req, res) => {
     const userFirstName = req.user ? req.user.first_name : null;
     const userOrganization = req.user ? req.user.organization : null;
     const userAdmin = req.user ? req.user.organization_admin : null;
+    const user_id = req.user ? req.user.id : null;
     const userObject = {
       firstName: userFirstName,
       organization: userOrganization,
       isAdmin: userAdmin
     }
-    res.render('ManagerDashBoard', userObject)
-    
-  } else {
+    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).send('Internal server error'); // Handle errors gracefully
+      }
+
+      if (results.length === 0) {
+        console.log('No data found for user id = 1');
+        return res.status(404).send('No data found');
+      }
+      // Assuming events_data is the BLOB column
+      var eventData = results[0].event_data;
+      const renderData = {
+        ...userObject,
+        eventData: eventData
+      };
+
+      try {
+        
+        //console.log(events); // Now you have the events data as a JSON object
+
+        
+        // Render the page and pass the events data to the view
+        res.render('ManagerDashBoard', renderData);
+
+      } catch (e) {
+        console.error('Invalid JSON data:', e);
+        res.status(400).send('Invalid JSON data in database');
+      }
+    }); 
+    } else {
     res.redirect('/');
   }
+    
 })
 
 
@@ -183,13 +213,7 @@ app.get('/schedule_employee', (req, res) => {
       }
       // Assuming events_data is the BLOB column
       var eventData = results[0].event_data;
-      
-      // Convert BLOB binary data to string
-      //var jsonData = JSON.parse(eventData);
-      //console.log(jsonData);
-      
-
-      // Parse JSON if it's valid JSON data
+  
       try {
         
         //console.log(events); // Now you have the events data as a JSON object
@@ -238,7 +262,7 @@ app.get('/add_employee', (req, res) => {
 
 app.use(bodyParser.json());
 app.post('/schedule_employee', (req, res) => {
-  // Assuming 'calendarInstance1' is your calendar instance
+ 
   // Retrieve all events from the calendar
   const organization_id = req.user ? req.user.organization_id : null;
 

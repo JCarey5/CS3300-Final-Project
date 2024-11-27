@@ -4,9 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Manager Dashboard</title>
-    <script src="script.js" defer></script>
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/styles.css/" type="text/css">
     <link rel="stylesheet" href="/calendar.js.css" type="text/css">
     <script type = "text/javascript" src="/calendar.js"></script>
 </head>
@@ -31,7 +29,6 @@
                 <a href="/view_employee">View Employees</a>
                 <a href="/logout">Logout</a>
             <% } %>
-            
         </div>
 
         <!-- Check if organization exists and display accordingly -->
@@ -51,20 +48,28 @@
 
         
         <script>
-        if(organization)
-        {
-            var calendarInstance1 = new calendarJs( "calendar", {
-              views: { fullMonth: { "showExtraTitleBarButtons": false } },
-              manualEditingEnabled: false,
+            organization = '<%= organization%>';
+             if(organization)
+             {
+                var calendarInstance1 = new calendarJs( "calendar", {
+                    views: { fullMonth: { "showExtraTitleBarButtons": false } },
+                    manualEditingEnabled: false,
     
-            } );
-        }
-        else
-        {
-            <a href="/create_org">Create An Organization</a>
-        }
+                    } );
+                    var eventData = '<%= eventData%>';
             
 
-           
+                    var decodedJsonData = eventData.replace(/&#34;/g, '"');
+                    calData = JSON.parse(decodedJsonData);
+
+                    console.log(calData);
+                    calendarInstance1.setEventsFromJson(decodedJsonData);
+                }
+                else
+                {
+                    //<a href="/create_org">Create An Organization</a>
+                }
+
+            
         </script>
         </html>
