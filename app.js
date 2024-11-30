@@ -216,7 +216,7 @@ app.get('/schedule_employee', (req, res) => {
   
       try {
         
-        //console.log(events); // Now you have the events data as a JSON object
+        
 
         
         // Render the page and pass the events data to the view
@@ -293,6 +293,9 @@ app.post('/schedule_employee', (req, res) => {
       console.log('Event JSON:', eventJson); // Logs the event JSON data
 
       const userID = req.user.id;
+      
+      //array that will hold all valid events to be sent to managers/admins
+      let adminEvents = [];
 
       employees.forEach(employee => {
         // Filter events for the current employee based on matching the title with the employee's full name
@@ -316,26 +319,47 @@ app.post('/schedule_employee', (req, res) => {
             .catch(error => {
                 console.error('Error exporting events for employee:', employee.fullName, error);
             });
+
+            adminEvents = adminEvents.concat(employeeEvents);
+
         } else {
             console.log(`No events found for ${employee.fullName}`);
           }
       });
 
       // Send the event data to the database (for the current user)
-      db.promise().execute(
-          'UPDATE users SET event_data = ? WHERE id = ?',
-          [eventJson, userID]
-      )
-      .then(() => {
-          // On success, send a response back to the client
-          res.status(200).json({ message: 'Events successfully exported to database!' });
-      })
-      .catch(error => {
-          console.error('Error exporting events:', error);
+      if (adminEvents.length > 0) {
+        const adminEventData = JSON.stringify(adminEvents);
 
-          // Send a response with an error status and message
-          res.status(500).json({ message: 'There was an error exporting events.', error: error.message });
-      });
+        // Assuming you want to send the data to all admins, you can query admin users and update them
+        db.query('SELECT id FROM users WHERE organization_id = ? AND organization_admin = ?', [organization_id, '1'], (err, adminResults) => {
+            if (err) {
+                console.error('Database query error for admins:', err);
+                return res.status(500).send('Internal server error');
+            }
+
+            // Update all admin users with the total event data
+            const adminPromises = adminResults.map(admin => {
+                return db.promise().execute(
+                    'UPDATE users SET event_data = ? WHERE id = ?',
+                    [adminEventData, admin.id]
+                );
+            });
+
+            // Execute all admin update queries in parallel
+            Promise.all(adminPromises)
+                .then(() => {
+                    console.log('Admin event data successfully updated.');
+                })
+                .catch(error => {
+                    console.error('Error exporting events to admins:', error);
+                });
+        });
+    }
+
+    // Send the response to the current manager
+    res.status(200).json({ message: 'Events successfully exported to database!' });
+
   });
 });
 
