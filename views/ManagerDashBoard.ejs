@@ -44,13 +44,21 @@
             
         </div>
 
+        <% if(!isAdmin) { %>
+            <div class="section shift-details">
+                <h3>Next Shift:</h3>
+                <p id="next-shift"></p>
+            </div>
+        <% } %>
         </body>
 
         
         <script>
             organization = '<%= organization%>';
-             if(organization)
-             {
+            isAdmin = '<%= isAdmin%>'
+            console.log(isAdmin);
+            if(organization)
+            {
                 var calendarInstance1 = new calendarJs( "calendar", {
                     views: { fullMonth: { "showExtraTitleBarButtons": false } },
                     manualEditingEnabled: false,
@@ -62,14 +70,67 @@
                     var decodedJsonData = eventData.replace(/&#34;/g, '"');
                     calData = JSON.parse(decodedJsonData);
 
-                    console.log(calData);
+                    console.log("Calendar Data:", calData);
                     calendarInstance1.setEventsFromJson(decodedJsonData);
-                }
-                else
-                {
+            }
+            else
+            {
                     //<a href="/create_org">Create An Organization</a>
+            }
+            if(isAdmin === '0'){
+                console.log("inside isAdmin");
+                function getNextShift() {
+                    // Get today's date
+                    const today = new Date();
+                    const todayDate = today.toLocaleString();
+                    //const todayDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                    console.log("Today", todayDate)
+        
+                    // Find the next shift
+                    let nextShift = null;
+                    let shiftDate = null;
+                    for (let shift of calData) {
+                        console.log(shift.from);
+                        /*if (shift.from && typeof shift.from === 'string') {
+                            const shiftDate = shift.from.split('T')[0];
+                            console.log("Date:", shiftDate);
+                        }*/
+
+                        if (shift.from > todayDate) {
+                            nextShift = shift;
+                            console.log("New:", nextShift)
+                            break;
+                        }
+                    }
+                    console.log("Data:", nextShift);
+                    return nextShift;
                 }
 
-            
+                function displayNextShift() {
+                    const nextShift = getNextShift();
+
+                    const nextShiftElement = document.getElementById('next-shift');
+
+                    if (nextShift) {
+                        // Format the start date to a readable string
+                        const shiftStartUTC = new Date(nextShift.from);
+                        const shiftStart = shiftStartUTC.toLocaleString();
+                        console.log("Better?", shiftStart);
+                        const shiftEndUTC = new Date(nextShift.to); // This is already in UTC
+                        const shiftEnd = shiftEndUTC.toLocaleString();
+
+                        // Display the shift start and end times as UTC (you can format this in any way)
+                        //const shiftStartFormatted = shiftStart.toISOString(); // e.g., 2024-11-26T07:00:00.000Z
+                        //const shiftEndFormatted = shiftEnd.toISOString(); // e.g., 2024-11-26T07:30:00.000Z
+
+                        nextShiftElement.innerHTML = `Date: ${shiftStart.slice(0, 10)} Time: ${shiftStart.slice(11, 16)} ${shiftStart.slice(20, 22)} - ${shiftEnd.slice(11, 16)} ${shiftEnd.slice(20, 22)}`;
+                    } else {
+                        nextShiftElement.innerHTML = "No upcoming shifts.";
+                    }
+                }
+
+                // Display the next shift when the page loads
+                window.onload = displayNextShift;
+            }
         </script>
         </html>
