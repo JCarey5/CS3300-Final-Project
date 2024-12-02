@@ -76,3 +76,9 @@ CREATE TABLE requests (
 ## Running the Program
 Now that you have set up your VSCode and MySQL, the program can be run simply by entering the command `npm run devStart` within the VSCode bash terminal and navigating to the appropriate local host
 which in this case is `http://localhost:3000/` by default.
+
+
+
+
+
+### Documentation
