@@ -158,6 +158,7 @@ app.get('/manager_dashboard', (req, res) => {
       organization: userOrganization,
       isAdmin: userAdmin
     }
+    //Query to be able to load the users shifts to the calendar on the dashboard
     db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
       if (err) {
         console.error('Database query error:', err);
@@ -206,9 +207,10 @@ app.get('/view_requests', (req, res) => {
       isAdmin: isAdmin,
       user_id: user_id
     }
-    
+    //checks for admin user before querying for request data, connected the id to employee name
     if(isAdmin === 1)
     {
+      //looking for data from pending requests, connects the name of employee to the id in the request
       db.query(`
         SELECT requests.*, CONCAT(users.first_name, ' ', users.last_name) AS employee_name
         FROM requests
@@ -218,6 +220,7 @@ app.get('/view_requests', (req, res) => {
             console.error('Error fetching pending requests:', err);
             return res.status(500).send('Internal server error');
         }
+        //creates a single object to be sent to the render funciton
         const renderData = {
           ...userObject,
           requests: results
@@ -227,6 +230,7 @@ app.get('/view_requests', (req, res) => {
       });
     }
     else{
+      //if employee, query for all requests instead of only pending, no need for the users name here either
       db.query(`SELECT* FROM requests WHERE requests.employee_id = ?`, [req.user.id], (err, results) => {
             if (err) {
                 console.error('Error fetching requests for the current user:', err);
@@ -266,10 +270,14 @@ app.post('/view_requests', (req, res) => {
       res.status(200).json({ message: 'Time-off request submitted successfully!' });
   });
 });
-
+/**
+ * Update Request Status route (POST)
+ * Used to update the status of time off requests when the 
+ * manager makes an action Approve or Deny, updates in the 
+ * mysql table
+ */
 app.post('/update-request-status', (req, res) => {
   const { id, status } = req.body;
-  console.log(req.body);
 
   // Validate input data (make sure we have an ID and a valid status)
   if (!id || !status) {
@@ -309,7 +317,7 @@ app.get('/schedule_employee', (req, res) => {
     console.log(user_id)
     const organization = req.user ? req.user.organization : null;
 
-    
+    //Used to find all shifts to load for manager
     const userEventDataPromise = new Promise((resolve, reject) => {
       db.query('SELECT event_data FROM users WHERE id = ?', [user_id], (err, results) => {
         if (err) {
@@ -322,7 +330,7 @@ app.get('/schedule_employee', (req, res) => {
         }
       });
     });
-    
+    //looks for approved requests connecting a first name to the request
     const requestsDataPromise = new Promise((resolve, reject) => {
       db.query(`
         SELECT requests.*, CONCAT(users.first_name, ' ', users.last_name) AS employee_name
@@ -359,7 +367,7 @@ app.get('/schedule_employee', (req, res) => {
 
 
 app.use(bodyParser.json());
-
+//used to fix issure with dates coming in as a not desirable format
 const formatDate = (date) => {
   // Format the date using toLocaleString with options for the correct format
   const options = {
@@ -371,8 +379,8 @@ const formatDate = (date) => {
       second: '2-digit',
       hour12: false, // 24-hour format
   };
-
-  const dateString = new Date(date).toLocaleString('en-GB', options); // en-GB for a more universal approach, you can adjust based on your locale
+  //Make the time correct for what was entered into the calendar
+  const dateString = new Date(date).toLocaleString('en-GB', options);
 
   // Split the formatted string into date and time
   const [datePart, timePart] = dateString.split(', ');
@@ -410,13 +418,12 @@ app.post('/schedule_employee', async (req, res) => {
       //console.log('Employees:', employees);
 
       const eventJson = req.body;
-      //console.log('Event JSON:', eventJson);
 
       const userID = req.user.id;
       let adminEvents = [];
       let conflicts = [];
 
-      // Process each employee asynchronously using async/await
+      // Process each employee asynchronously using async/await to avoid running code out of order
       for (const employee of employees) {
           const employeeEvents = eventJson.filter(event => event.title && event.title.includes(employee.fullName));
           let validEmployeeEvents = [];
@@ -425,9 +432,9 @@ app.post('/schedule_employee', async (req, res) => {
           // Check each event for conflicts with time-off requests
           for (const event of employeeEvents) {
               const eventStart = formatDate(event.from);
-              //console.log("Event start", eventStart);
+              
               const eventEnd = formatDate(event.to);
-              //console.log("Start Date", eventStart)
+              
               try {
                   // Query to check for time-off conflicts
                   const [timeOffResults] = await db.promise().query(`
@@ -439,25 +446,25 @@ app.post('/schedule_employee', async (req, res) => {
                           OR
                           (start_date <= ? AND end_date >= ?)  -- Time-off overlaps with event
                       )`, [employee.id, eventStart, eventEnd, eventStart, eventEnd]);
-                  //console.log("FOUND CONFLICTS", timeOffResults)
+                  
                   if (timeOffResults.length > 0) {
                       // If a conflict is found, add it to the conflicts array
                       conflicts.push({
                           event: event,
                       });
-                      //console.log("CONFLICTS",conflicts);
+                      
                       console.log(`Event ${event.title} conflicts with a time-off request for ${employee.fullName}`);
                   } else {
-                      // Only add to adminEvents if no conflict is found
+                      //arrays that hold the events for current employee and all events for admins
                       validEmployeeEvents.push(event);
                       adminEvents.push(event);
-                      console.log("CURRENT ADMIN EVENTS", adminEvents);
+                      
                       
                   }
               } catch (err) {
                   console.error('Error checking time-off requests:', err);
               }
-          }
+          } //Stringify before sending to the database 
             const validEmployeeEventData = JSON.stringify(validEmployeeEvents);
             await db.promise().execute(
                 'UPDATE users SET event_data = ? WHERE id = ?',
@@ -468,9 +475,6 @@ app.post('/schedule_employee', async (req, res) => {
       }
       console.log("ADMIN EVENTS:", adminEvents)
 
-      // Log the length of admin events after all async operations
-      console.log("ADMIN LENGTH:", adminEvents.length);
-      console.log("Final Admin", adminEvents);
 
       // Only proceed to update the admin events if there are events to save
       if (adminEvents.length > 0) {
@@ -492,7 +496,9 @@ app.post('/schedule_employee', async (req, res) => {
 
           console.log('Admin event data successfully updated.');
       }
-
+      //Used to send a response to the front end if there were any conflicts found
+      //after the rest of events have already been sent to avoid the return messing up 
+      //or preventing the sending of shifts
       if (conflicts.length > 0) {
         return res.send({
           conflicts: conflicts,
@@ -500,7 +506,7 @@ app.post('/schedule_employee', async (req, res) => {
         });
       }
 
-      // Send the response to the manager
+      // Send the response to the manager on frontend
       res.status(200).json({ message: 'Events successfully exported to database!' });
 
 
