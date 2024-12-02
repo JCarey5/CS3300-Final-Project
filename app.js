@@ -190,8 +190,6 @@ app.get('/manager_dashboard', (req, res) => {
 })
 
 
-<<<<<<< HEAD
-=======
 app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
     const user_id = req.user ? req.user.id : null;
@@ -230,7 +228,6 @@ app.get('/schedule_employee', (req, res) => {
   }
 })
 
->>>>>>> 1d9a53323f03d9ffd17af5b1a08d8035ab0ff8c2
 
 /*Dashboard (GET)
 */
@@ -411,27 +408,28 @@ app.post('/schedule_employee', (req, res) => {
             return event.title && event.title.includes(employee.fullName);  // Check if the title contains the employee's full name
         });
 
-        if (employeeEvents.length > 0) {
-            // Prepare the events to be updated for the current employee in the database
-            console.log(employeeEvents)
-            const employeeEventData = JSON.stringify(employeeEvents);
+          // Prepare the events to be updated for the current employee in the database
+          console.log(employeeEvents)
+          const employeeEventData = JSON.stringify(employeeEvents);
 
-            // Update the employee's record in the database
-            db.promise().execute(
-                'UPDATE users SET event_data = ? WHERE id = ?',
-                [employeeEventData, employee.id]
-            )
-            .then(() => {
-                console.log(`Events for ${employee.fullName} successfully updated.`);
-            })
-            .catch(error => {
-                console.error('Error exporting events for employee:', employee.fullName, error);
-            });
+          // Update the employee's record in the database
+          db.promise().execute(
+              'UPDATE users SET event_data = ? WHERE id = ?',
+              [employeeEventData, employee.id]
+          )
+          .then(() => {
+              console.log(`Events for ${employee.fullName} successfully updated.`);
+          })
+          .catch(error => {
+              console.error('Error exporting events for employee:', employee.fullName, error);
+          });
 
-            adminEvents = adminEvents.concat(employeeEvents);
-
+          adminEvents = adminEvents.concat(employeeEvents);
+          if (employeeEvents.length > 0) {
+            console.log('Events found');
         } else {
             console.log(`No events found for ${employee.fullName}`);
+
           }
       });
 
