@@ -15,6 +15,7 @@ app.use(express.json());
 
 
 // Passport setup (use email as the username)
+// Saves session data for the logged in user, for access on all pages.
 passport.use(new LocalStrategy(
   { usernameField: 'email' },
   (email, password, done) => {
@@ -60,7 +61,7 @@ app.use(passport.session());
 app.use(connectFlash());
 app.set('view engine', 'ejs');
 
-// Routes
+// Routes-----------------------------------------------------------------------------------------------------
 
 // Show the login form
 app.get('/', (req, res) => {
@@ -190,64 +191,9 @@ app.get('/manager_dashboard', (req, res) => {
 })
 
 
-app.get('/schedule_employee', (req, res) => {
-  if (req.isAuthenticated()) {
-    const user_id = req.user ? req.user.id : null;
-    const isAdmin = req.user ? req.user.organization_admin : null;
-    console.log(user_id)
-    const organization = req.user ? req.user.organization : null;
+/*View Requests route (GET)
+Loads all pending time off requests to the admin.
 
-    
-    const userEventDataPromise = new Promise((resolve, reject) => {
-      db.query('SELECT event_data FROM users WHERE id = ?', [user_id], (err, results) => {
-        if (err) {
-          reject('Database query error for user event data:', err);
-        }
-        if (results.length === 0) {
-          reject('No data found for user id');
-        } else {
-          resolve(results[0].event_data);
-        }
-      });
-    });
-    
-    const requestsDataPromise = new Promise((resolve, reject) => {
-      db.query(`
-        SELECT requests.*, CONCAT(users.first_name, ' ', users.last_name) AS employee_name
-        FROM requests
-        JOIN users ON requests.employee_id = users.id
-        WHERE requests.status = ?`, ['Approved'], (err, results) => {
-          if (err) {
-            reject('Error fetching requests:', err);
-          } else {
-            resolve(results);
-          }
-      });
-    });
-    
-    // Wait for both promises to resolve
-    Promise.all([userEventDataPromise, requestsDataPromise])
-      .then(([eventData, requests]) => {
-        // Both promises resolved successfully
-        console.log("accepted",requests);
-        res.render('ScheduleEmployee', {
-          isAdmin,
-          organization,
-          eventData: eventData,
-          requests: requests
-        });
-      })
-      .catch(error => {
-        console.error(error);
-        res.status(500).send('Error occurred while fetching data');
-      });
-    } else {
-    res.redirect('/');
-  }
-})
-
-
-/*Dashboard (GET)
 */
 app.get('/view_requests', (req, res) => {
   if (req.isAuthenticated()) {
@@ -300,15 +246,17 @@ app.get('/view_requests', (req, res) => {
   }
 })
 
+/*View Requests route (POST)
+Allows for the admin to approve or deny time off requests,
+which updates the status of them in MySQL
+*/
 app.post('/view_requests', (req, res) => {
   console.log("req body", req.body);
   const { startDate, endDate, requestType, employeeId } = req.body;
 
-  // Validate input data (check for overlapping requests, etc.)
-  // You can write a query to check if the employee already has a time-off request for those dates.
 
   const query = 'INSERT INTO requests (employee_id, start_date, end_date, request_type, status) VALUES (?, ?, ?, ?, ?)';
-  const status = 'Pending'; // Or 'Approved'/'Denied' based on the logic
+  const status = 'Pending'; 
   db.query(query, [employeeId, startDate, endDate, requestType, status], (err, result) => {
       if (err) {
           console.error('Error inserting request into the database:', err);
@@ -626,7 +574,7 @@ app.post('/add_employee', (req, res) => {
 
 
 
-/*Remove Employee (POST)
+/*Remove Employee (GET)
 Similar to view employee
 Retrieve list of users in same organization as the user.
 */
@@ -908,6 +856,7 @@ app.get('/logout', (req, res) => {
 });
 
 
+// Connect to port 3000 to allow localhost access
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
