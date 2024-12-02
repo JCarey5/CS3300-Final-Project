@@ -11,7 +11,7 @@ const app = express();
 
 //serve static files
 app.use(express.static(__dirname + '/public'));
-
+app.use(express.json());
 
 
 // Passport setup (use email as the username)
@@ -190,6 +190,47 @@ app.get('/manager_dashboard', (req, res) => {
 })
 
 
+<<<<<<< HEAD
+=======
+app.get('/schedule_employee', (req, res) => {
+  if (req.isAuthenticated()) {
+    const user_id = req.user ? req.user.id : null;
+    const isAdmin = req.user ? req.user.organization_admin : null;
+    console.log(user_id)
+    const organization = req.user ? req.user.organization : null;
+
+    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).send('Internal server error'); // Handle errors gracefully
+      }
+
+      if (results.length === 0) {
+        console.log('No data found for user id = 1');
+        return res.status(404).send('No data found');
+      }
+      
+      var eventData = results[0].event_data;
+  
+      try {
+        
+        
+
+        
+        // Render the page and pass the events data to the view
+        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
+
+      } catch (e) {
+        console.error('Invalid JSON data:', e);
+        res.status(400).send('Invalid JSON data in database');
+      }
+    }); 
+    } else {
+    res.redirect('/');
+  }
+})
+
+>>>>>>> 1d9a53323f03d9ffd17af5b1a08d8035ab0ff8c2
 
 /*Dashboard (GET)
 */
@@ -198,17 +239,83 @@ app.get('/view_requests', (req, res) => {
     //Information directly sent to the front end to display user specific data
     const userOrganization = req.user ? req.user.organization : null;
     const isAdmin = req.user ? req.user.organization_admin : null;
+    const user_id = req.user ? req.user.id : null;
     const userObject = {
       organization: userOrganization,
-      isAdmin: isAdmin
+      isAdmin: isAdmin,
+      user_id: user_id
     }
-    res.render('view_requests', userObject)
+    
+    if(isAdmin === 1)
+    {
+      db.query('SELECT * FROM requests WHERE status = ?', ['Pending'], (err, results) => {
+        if (err) {
+            console.error('Error fetching pending requests:', err);
+            return res.status(500).send('Internal server error');
+        }
+        const renderData = {
+          ...userObject,
+          pendingRequests: results
+        };
+        console.log("array of results", results);
+        res.render('view_requests', renderData);
+      });
+    }
+    else{
+      res.render('view_requests', userObject)
+    }
+    
     
   } else {
     res.redirect('/');
   }
 })
 
+app.post('/view_requests', (req, res) => {
+  console.log("req body", req.body);
+  const { startDate, endDate, requestType, employeeId } = req.body;
+
+  // Validate input data (check for overlapping requests, etc.)
+  // You can write a query to check if the employee already has a time-off request for those dates.
+
+  const query = 'INSERT INTO requests (employee_id, start_date, end_date, request_type, status) VALUES (?, ?, ?, ?, ?)';
+  const status = 'Pending'; // Or 'Approved'/'Denied' based on the logic
+  db.query(query, [employeeId, startDate, endDate, requestType, status], (err, result) => {
+      if (err) {
+          console.error('Error inserting request into the database:', err);
+          return res.status(500).json({ message: 'Failed to submit time-off request.' });
+      }
+
+      res.status(200).json({ message: 'Time-off request submitted successfully!' });
+  });
+});
+
+app.post('/update-request-status', (req, res) => {
+  const { id, status } = req.body;
+  console.log(req.body);
+
+  // Validate input data (make sure we have an ID and a valid status)
+  if (!id || !status) {
+    return res.status(400).json({ message: 'Invalid request data.' });
+  }
+
+  // Update the status of the request in the database
+  const query = 'UPDATE requests SET status = ? WHERE id = ?';
+  
+  db.query(query, [status, id], (err, result) => {
+    if (err) {
+      console.error('Error updating request status:', err);
+      return res.status(500).json({ message: 'Failed to update request status.' });
+    }
+
+    // Check if the request was updated
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Request not found.' });
+    }
+
+    res.status(200).json({ message: 'Request status updated successfully!' });
+  });
+});
 
 
 
