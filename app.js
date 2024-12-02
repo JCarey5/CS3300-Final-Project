@@ -523,7 +523,7 @@ app.post('/add_employee', (req, res) => {
 
 
 
-/*Remove Employee (POST)
+/*Remove Employee (GET)
 Similar to view employee
 Retrieve list of users in same organization as the user.
 */
