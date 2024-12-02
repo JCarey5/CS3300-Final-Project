@@ -105,7 +105,6 @@ MySQL version 8.0.40.0 (as of December 1, 2024)
 
 ## Code Structure and Organization
 ### Tech Stack Structure
-**
 ```
 User Request
      |
@@ -126,10 +125,8 @@ Middleware Chain
 Server Response
  (Authenticated result, Flash message)
 ```
-**
 
 ### Organization of Files
-**
 ```
 Project/
 │
@@ -161,7 +158,6 @@ Project/
 ├── .env           // Environment variables (e.g., database URI, session secrets)
 └── README.md      // Project documentation
 ```
-**
 
 
 # Code Prologue:
