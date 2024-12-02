@@ -43,10 +43,10 @@
             <h2>Submit Time-Off Request</h2>
             <form id="timeOffForm">
                 <label for="startDate">Start Date:</label>
-                <input type="date" id="startDate" name="startDate" required><br>
+                <input type="date" id="start" name="trip-start" required><br>
 
                 <label for="endDate">End Date:</label>
-                <input type="date" id="endDate" name="endDate" required><br>
+                <input type="date" id="end" name="trip-end" required><br>
 
                 <label for="requestType">Request Type:</label>
                 <select id="requestType" name="requestType" required>
@@ -54,8 +54,9 @@
                     <option value="Sick">Sick Leave</option>
                     <option value="Personal">Personal Leave</option>
                 </select><br>
-
-                <button type="submit">Submit Request</button>
+                <div class = "form-group">
+                    <button id="submitAvailability">Submit</button>
+                </div>
             </form>
 
             <div id="requests-table" class="requests-table">

@@ -50,9 +50,10 @@
             <div id="calendar1" data-binding-calendar='{ "views": { "fullMonth": { "showExtraTitleBarButtons": false } } }'></div>
             
         </div>
-        <button id = "exportButton">Save Shifts</button>
+        <button class = "accept-btn" id = "exportButton">Save Shifts</button>
 
         <div id="requests-table" class="requests-table">
+            <div class = "form-container">
             <h2>Accepted Requests</h2>
             <!-- Active requests will be displayed here -->
             <table>
@@ -84,6 +85,7 @@
                     <% } %>
                 </tbody>
             </table>
+            </div>
         </div>
         </body>
         
