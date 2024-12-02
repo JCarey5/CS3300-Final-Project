@@ -211,7 +211,7 @@ app.get('/schedule_employee', (req, res) => {
         console.log('No data found for user id = 1');
         return res.status(404).send('No data found');
       }
-      // Assuming events_data is the BLOB column
+      
       var eventData = results[0].event_data;
   
       try {

@@ -136,7 +136,6 @@
             .then(data => {
                 // Check if the message indicates success
                 if (data.message === 'Request status updated successfully!') {
-                    alert(`Request ${data.requestId} has been updated to ${data.updatedStatus}`);
                     location.reload();  // Reload the page to reflect the updated status
                 } else {
                     alert('Failed to update request status.');
