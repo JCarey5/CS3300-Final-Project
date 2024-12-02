@@ -46,51 +46,53 @@
     </div>
 
 
-
-
-  <h1>Employees in <%= organization %></h1>
-
-  <% if (messages.error) { %>
-    <div class="alert alert-danger">
-      <% messages.error.forEach(function(msg) { %>
-        <p><%= msg %></p>
-      <% }); %>
-    </div>
-  <% } %>
-
-  <% if (messages.success) { %>
-    <div class="alert alert-success">
-      <% messages.success.forEach(function(msg) { %>
-        <p><%= msg %></p>
-      <% }); %>
-    </div>
-  <% } %>
-
   <% if (employees.length > 0) { %>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Email</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% employees.forEach(function(employee) { %>
+    <div class="form-container">
+      <h1>Remove From <%= organization %></h1>
+
+      <!--Display and error/success messages-->
+      <% if (messages.error) { %>
+        <div class="alert alert-danger">
+          <% messages.error.forEach(function(msg) { %>
+            <p><%= msg %></p>
+          <% }); %>
+        </div>
+      <% } %>
+    
+      <% if (messages.success) { %>
+        <div class="alert alert-success">
+          <% messages.success.forEach(function(msg) { %>
+            <p><%= msg %></p>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <table class="coworkers-table">
+        <thead>
           <tr>
-            <td><%= employee.first_name %></td>
-            <td><%= employee.last_name %></td>
-            <td><%= employee.email %></td>
-            <td>
-              <form id="delete-form-<%= employee.id %>" action="/remove_employee/<%= employee.id %>" method="POST" style="display:inline;">
-                <button type="button" onclick="confirmDelete(<%= employee.id %>)">Delete</button>
-              </form>
-            </td>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Action</th>
           </tr>
-        <% }); %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% employees.forEach(function(employee) { %>
+            <tr>
+              <td><%= employee.first_name %></td>
+              <td><%= employee.last_name %></td>
+              <td><%= employee.email %></td>
+              <td>
+                <form id="delete-form-<%= employee.id %>" action="/remove_employee/<%= employee.id %>" method="POST" style="display:inline;">
+                  <button type="button" onclick="confirmDelete(<%= employee.id %>)" class="deny-btn">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    
   <% } else { %>
     <p>No employees found in your organization.</p>
   <% } %>
