@@ -15,6 +15,7 @@ app.use(express.json());
 
 
 // Passport setup (use email as the username)
+// Saves session data for the logged in user, for access on all pages.
 passport.use(new LocalStrategy(
   { usernameField: 'email' },
   (email, password, done) => {
@@ -60,7 +61,7 @@ app.use(passport.session());
 app.use(connectFlash());
 app.set('view engine', 'ejs');
 
-// Routes
+// Routes-----------------------------------------------------------------------------------------------------
 
 // Show the login form
 app.get('/', (req, res) => {
@@ -190,49 +191,9 @@ app.get('/manager_dashboard', (req, res) => {
 })
 
 
-<<<<<<< HEAD
-=======
-app.get('/schedule_employee', (req, res) => {
-  if (req.isAuthenticated()) {
-    const user_id = req.user ? req.user.id : null;
-    const isAdmin = req.user ? req.user.organization_admin : null;
-    console.log(user_id)
-    const organization = req.user ? req.user.organization : null;
+/*View Requests route (GET)
+Loads all pending time off requests to the admin.
 
-    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
-      if (err) {
-        console.error('Database query error:', err);
-        return res.status(500).send('Internal server error'); // Handle errors gracefully
-      }
-
-      if (results.length === 0) {
-        console.log('No data found for user id = 1');
-        return res.status(404).send('No data found');
-      }
-      
-      var eventData = results[0].event_data;
-  
-      try {
-        
-        
-
-        
-        // Render the page and pass the events data to the view
-        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
-
-      } catch (e) {
-        console.error('Invalid JSON data:', e);
-        res.status(400).send('Invalid JSON data in database');
-      }
-    }); 
-    } else {
-    res.redirect('/');
-  }
-})
-
->>>>>>> 1d9a53323f03d9ffd17af5b1a08d8035ab0ff8c2
-
-/*Dashboard (GET)
 */
 app.get('/view_requests', (req, res) => {
   if (req.isAuthenticated()) {
@@ -271,15 +232,17 @@ app.get('/view_requests', (req, res) => {
   }
 })
 
+/*View Requests route (POST)
+Allows for the admin to approve or deny time off requests,
+which updates the status of them in MySQL
+*/
 app.post('/view_requests', (req, res) => {
   console.log("req body", req.body);
   const { startDate, endDate, requestType, employeeId } = req.body;
 
-  // Validate input data (check for overlapping requests, etc.)
-  // You can write a query to check if the employee already has a time-off request for those dates.
 
   const query = 'INSERT INTO requests (employee_id, start_date, end_date, request_type, status) VALUES (?, ?, ?, ?, ?)';
-  const status = 'Pending'; // Or 'Approved'/'Denied' based on the logic
+  const status = 'Pending'; 
   db.query(query, [employeeId, startDate, endDate, requestType, status], (err, result) => {
       if (err) {
           console.error('Error inserting request into the database:', err);
@@ -841,6 +804,7 @@ app.get('/logout', (req, res) => {
 });
 
 
+// Connect to port 3000 to allow localhost access
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
