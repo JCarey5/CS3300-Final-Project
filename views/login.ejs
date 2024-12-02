@@ -8,26 +8,29 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <h2>Login</h2>
 
-  <% if (message && message.length > 0) { %>
-    <div style="color: red;">
-      <%= message %>
-    </div>
-  <% } %>
+  
 
-  <form action="/login" method="POST">
-    <div>
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-    <div>
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit">Login</button>
-  </form>
+  <div class="form-container">
+    <h1>Welcome</h1>
 
-  <p>Don't have an account? <a href="/register">Register here</a></p>
+    <form action="/login" method="POST" id="login_form" class="form-group">
+      <% if (message && message.length > 0) { %>
+        <div style="color: red;">
+          <%= message %>
+        </div>
+      <% } %>
+      
+      <input type="email" id="email" name="email" required placeholder="Email">
+      <input type="password" id="password" name="password" required placeholder="Password">
+      
+      <button id="submit" type="submit">Login</button>
+    </form>
+    <a href="/register">
+      <button id="signUpLinkButton" class="signup-button">Create Account</button>
+    </a>
+  </div>
+  
+  
 </body>
 </html>
