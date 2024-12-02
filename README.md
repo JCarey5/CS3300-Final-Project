@@ -128,6 +128,7 @@ Server Response
 
 ### Organization of Files
 **
+```
 Project/
 │
 ├── app.js         // Main application file
@@ -157,7 +158,7 @@ Project/
 ├── package.json   // Project dependencies and scripts
 ├── .env           // Environment variables (e.g., database URI, session secrets)
 └── README.md      // Project documentation
-
+```
 **
 
 
@@ -1193,7 +1194,7 @@ module.exports = db;
 - The db object is exported for reuse across other parts of the application. This allows modules like route handlers or controllers to interact with the database.
 
 
-# package.sjon
+# package.json
 ```
 {
   "name": "test",
