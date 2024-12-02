@@ -68,9 +68,9 @@ CREATE TABLE requests (
     request_type VARCHAR(255),
     status ENUM('Pending', 'Approved', 'Denied'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_employee_id FOREIGN KEY (employee_id) REFERENCES users(id)
-);
+) ENGINE=InnoDB;
 ```
 
 ## Running the Program
