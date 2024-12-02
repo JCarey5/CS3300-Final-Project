@@ -302,39 +302,6 @@ Check if user is logged in,
 Loads the data_event column from specific user that is logged in.
 Should only display the users schedule and not others.
 */
-/*app.get('/schedule_employee', (req, res) => {
-  if (req.isAuthenticated()) {
-    const user_id = req.user ? req.user.id : null;
-    const isAdmin = req.user ? req.user.organization_admin : null;
-    console.log(user_id)
-    const organization = req.user ? req.user.organization : null;
-
-    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
-      if (err) {
-        console.error('Database query error:', err);
-        return res.status(500).send('Internal server error'); // Handle errors
-      }
-
-      if (results.length === 0) {
-        console.log('No data found for user id = 1');
-        return res.status(404).send('No data found');
-      }
-      //Take event data from MySQL results
-      var eventData = results[0].event_data;
-  
-      try {
-        // Render the page and pass the events data to the view
-        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
-
-      } catch (e) {
-        console.error('Invalid JSON data:', e);
-        res.status(400).send('Invalid JSON data in database');
-      }
-    }); 
-    } else {
-    res.redirect('/');
-  }
-})*/
 app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
     const user_id = req.user ? req.user.id : null;
@@ -491,24 +458,15 @@ app.post('/schedule_employee', async (req, res) => {
                   console.error('Error checking time-off requests:', err);
               }
           }
-          if (validEmployeeEvents.length > 0) {
             const validEmployeeEventData = JSON.stringify(validEmployeeEvents);
             await db.promise().execute(
                 'UPDATE users SET event_data = ? WHERE id = ?',
                 [validEmployeeEventData, employee.id]
             );
             console.log(`Employee ${employee.fullName} events successfully updated.`);
-            
-        } 
+             
       }
       console.log("ADMIN EVENTS:", adminEvents)
-
-      /*if (conflicts.length > 0) {
-        return res.send({
-          conflicts: conflicts,
-          message: 'There are conflicts with time-off requests.'
-        });
-    }*/
 
       // Log the length of admin events after all async operations
       console.log("ADMIN LENGTH:", adminEvents.length);
@@ -541,7 +499,7 @@ app.post('/schedule_employee', async (req, res) => {
           message: 'There are conflicts with time-off requests.'
         });
       }
-      
+
       // Send the response to the manager
       res.status(200).json({ message: 'Events successfully exported to database!' });
 

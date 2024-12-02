@@ -78,6 +78,76 @@ CREATE TABLE requests (
     CONSTRAINT fk_employee_id FOREIGN KEY (employee_id) REFERENCES users(id)
 ) ENGINE=InnoDB;
 ```
+### Explanation of MySQL
+```
+CREATE DATABASE userDB;
+USE userDB;
+```
+- Purpose: The userDB database is used to manage users, organizations, and requests in an organizational system.
+- Database Context: All tables and operations in the following sections apply to the userDB database.
+
+```
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    organization_id VARCHAR(255) DEFAULT NULL,
+    organization VARCHAR(100) DEFAULT NULL,
+    organization_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    event_data LONGTEXT DEFAULT NULL
+);
+```
+- id (INT): The unique identifier for each user. This is an auto-incrementing field, meaning it automatically increments when a new user is created.
+- first_name (VARCHAR(50)): The first name of the user. Cannot be NULL.
+- last_name (VARCHAR(50)): The last name of the user. Cannot be NULL.
+- email (VARCHAR(100)): The email address of the user. This field must be unique, meaning no two users can share the same email address. Cannot be NULL.
+- password (VARCHAR(255)): The password of the user, stored as a hashed string (recommended length for hashing). Cannot be NULL.
+- organization_id (VARCHAR(255)): An optional field that links the user to a specific organization. This can be NULL if the user is not associated with any organization.
+- organization (VARCHAR(100)): The name of the organization the user belongs to. This is an optional field and can be NULL.
+- organization_admin (BOOLEAN): A flag indicating whether the user is an administrator for the organization. Default value is FALSE.
+- created_at (TIMESTAMP): The timestamp of when the user was created. Automatically set to the current timestamp when the user is inserted.
+- updated_at (TIMESTAMP): The timestamp of when the user record was last updated. This value automatically updates whenever the record is modified.
+- event_data (LONGTEXT): An optional field to store any event-related data as long text. Can be NULL.
+
+```
+CREATE TABLE organizations (
+    organization_id VARCHAR(255) PRIMARY KEY,
+    organization_name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+- organization_id (VARCHAR(255)): The unique identifier for each organization. This serves as the primary key for the table.
+- organization_name (VARCHAR(100)): The name of the organization. Cannot be NULL.
+- created_at (TIMESTAMP): The timestamp when the organization was created. Automatically set to the current timestamp when the organization is inserted.
+- updated_at (TIMESTAMP): The timestamp of the last update made to the organization record. This value automatically updates whenever the record is modified.
+
+```
+CREATE TABLE requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT,
+    start_date DATETIME,
+    end_date DATETIME,
+    request_type VARCHAR(255),
+    status ENUM('Pending', 'Approved', 'Denied'),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_employee_id FOREIGN KEY (employee_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+```
+- id (INT): The unique identifier for each request. This is an auto-incrementing field.
+- employee_id (INT): The ID of the user (employee) making the request. This is a foreign key that references the id column in the users table. The employee_id must match a valid user ID.
+- start_date (DATETIME): The start date and time of the requested event or action.
+- end_date (DATETIME): The end date and time of the requested event or action.
+- request_type (VARCHAR(255)): The type of request being made (e.g., "Vacation", "Leave", etc.).
+- status (ENUM): The status of the request, which can be one of the following: 'Pending', 'Approved', or 'Denied'. This field allows these three predefined values only.
+- created_at (TIMESTAMP): The timestamp when the request was created. Automatically set to the current timestamp when the request is inserted.
+- updated_at (TIMESTAMP): The timestamp when the request record was last updated. This value automatically updates whenever the record is modified.
+- CONSTRAINT fk_employee_id: A foreign key constraint that ensures the employee_id in the requests table corresponds to a valid id in the users table.
 
 ## Running the Program
 Now that you have set up your VSCode and MySQL, the program can be run simply by entering the command `npm run devStart` within the VSCode bash terminal and navigating to the appropriate local host
@@ -1261,7 +1331,8 @@ devStart: Runs the project using nodemon app.js, enabling automatic restarts on 
   - nodemon: Automatically restarts the app when file changes are detected.
 
 
-
+# Future of this Project
+This project can be downloaded, modified, and redistributed to anyone. Any features to be added to existing or future ones. Any existing code can be modified as long as the correct changes are made to the MySQL server and any full stack code.
 
 
 
