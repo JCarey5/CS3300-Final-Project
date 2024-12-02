@@ -2,9 +2,11 @@
     <html>
     <head>
     <title>View Employee Requests</title>
+    
     <script src="script.js" defer></script>
     <link rel="stylesheet" href="style.css">
 </head>
+
     <body>
         <div class="navbar">
             <div class="logoimg">
@@ -21,6 +23,7 @@
                 <a href="/logout">Logout</a>
             <% } else { %>
                 <!-- Links for non-admin users -->
+                <a href="/manager_dashboard">Dashboard</a>
                 <a href="/view_employee">View Employees</a>
                 <a href="/logout">Logout</a>
             <% } %>
@@ -34,4 +37,168 @@
             <h1>Requests</h1>
             <p>You are not currently part of an organization.</p>
         <% } %>
-        </body>
+
+        <!-- View for Employee -->
+        <div id="employee-view" class="form-container">
+            <h2>Submit Time-Off Request</h2>
+            <form id="timeOffForm">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" name="startDate" required><br>
+
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" name="endDate" required><br>
+
+                <label for="requestType">Request Type:</label>
+                <select id="requestType" name="requestType" required>
+                    <option value="Vacation">Vacation</option>
+                    <option value="Sick">Sick Leave</option>
+                    <option value="Personal">Personal Leave</option>
+                </select><br>
+
+                <button type="submit">Submit Request</button>
+            </form>
+        </div>
+
+        <!-- View for Admin -->
+        <div id="admin-view" class="admin-container" style="display: none;">
+            <div id="requests-table" class="requests-table">
+                <!-- Active requests will be displayed here -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Request Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (isAdmin === 1) { %>
+                            <% if (pendingRequests.length > 0) { %>
+                                <% pendingRequests.forEach(function(request) { %>
+                                    <tr>
+                                        <td><%= request.employee_id %></td>
+                                        <!-- formatting for the dates within the requests table -->
+                                        <td><%= new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
+                                        <td><%= new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
+                                        <td><%= request.request_type %></td>
+                                        <td><%= request.status %></td>
+                                        <td>
+                                            <button class="accept-btn" data-id="<%= request.id %>">Accept</button>
+                                            <button class="deny-btn" data-id="<%= request.id %>">Deny</button>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5">No pending requests.</td>
+                                </tr>
+                            <% } %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </body>
+
+    <script>
+        isAdmin = '<%= isAdmin%>';
+        user_id = '<%= user_id%>';
+
+        // Event listener for accept button
+        document.querySelectorAll('.accept-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                updateRequestStatus(requestId, 'Approved');
+            });
+        });
+
+        // Event listener for decline button
+        document.querySelectorAll('.deny-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                updateRequestStatus(requestId, 'Denied');
+            });
+        });
+
+        // Function to update request status
+        function updateRequestStatus(requestId, status) {
+            fetch('/update-request-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: requestId, status: status })
+            })
+            .then(response => response.json()) // Convert the response to JSON
+            .then(data => {
+                // Check if the message indicates success
+                if (data.message === 'Request status updated successfully!') {
+                    alert(`Request ${data.requestId} has been updated to ${data.updatedStatus}`);
+                    location.reload();  // Reload the page to reflect the updated status
+                } else {
+                    alert('Failed to update request status.');
+                }
+            })
+            .catch(error => {
+            console.error('Error:', error);
+            alert('There was an error updating the request status.');
+            });
+        }
+
+        function toggleView() {
+            console.log("isAdmin:", isAdmin);
+            if (isAdmin === '1') {
+                console.log("Admin");
+                document.getElementById('employee-view').style.display = 'none';
+                document.getElementById('admin-view').style.display = 'block';
+            //loadActiveRequests(); // Fetch active requests from the server and display them
+            } else {
+                console.log("Employee");
+                document.getElementById('employee-view').style.display = 'block';
+                document.getElementById('admin-view').style.display = 'none';
+            }
+        }
+
+        document.getElementById('timeOffForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form from submitting the default way
+
+        // Collect the data from the form
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const requestType = document.getElementById('requestType').value;
+
+        const requestData = {
+            startDate: startDate,
+            endDate: endDate,
+            requestType: requestType,
+            employeeId: user_id// This should be dynamically generated or retrieved (e.g., from session)
+        };
+
+        // Send the request data to the server (mocked as a console log here)
+        console.log('Submitting time-off request:', requestData);
+
+        fetch('/view_requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // We're sending JSON data
+            },
+            body: JSON.stringify(requestData) // Convert JavaScript object to JSON string
+        })
+        .then(data => {
+            console.log(data.message); // Success message from the server
+            // Optionally: Reset the form or show a success message to the user
+            document.getElementById('timeOffForm').reset();
+        })
+        .catch(error => {
+            console.error('Error submitting time-off request:', error);
+            // Optionally: Show an error message to the user
+        });
+
+        // After submission, clear the form
+    });
+
+        window.onload = toggleView;
+    </script>
