@@ -8,11 +8,23 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+  <div class="navbar">
+    <div class="logo-container">
+        <div class="logoimg">
+            <img src="MinuteToManage.png" alt="Logo">
+        </div>
+        <div class="logo-text">
+            Minute to Manage
+        </div>
+    </div>
+  </div>
 
   
 
   <div class="form-container">
-    <h1>Welcome</h1>
+
+    <h1>Welcome to MinuteToManage</h1>
+    
 
     <form action="/login" method="POST" id="login_form" class="form-group">
       <% if (message && message.length > 0) { %>

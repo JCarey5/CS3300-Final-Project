@@ -36,32 +36,35 @@
     </div>
 
 
-    <h1>Add User to <%= organization %></h1>
+    <div class="form-container">
+        <form action="/add_employee" method="POST">
+            <h1>Add User to <%= organization %></h1>
+            
+            <!-- Display Success Message -->
+        <% if (messages && messages.success) { %>
+            <div style="color: green; font-weight: bold;">
+                <%= messages.success %>
+            </div>
+        <% } %>
 
-    <!-- Display Success Message -->
-    <% if (messages && messages.success) { %>
-        <div style="color: green; font-weight: bold;">
-            <%= messages.success %>
-        </div>
-    <% } %>
+        <!-- Display Error Message -->
+        <% if (messages && messages.error) { %>
+            <div style="color: red; font-weight: bold;">
+                <%= messages.error %>
+            </div>
+        <% } %>
 
-    <!-- Display Error Message -->
-    <% if (messages && messages.error) { %>
-        <div style="color: red; font-weight: bold;">
-            <%= messages.error %>
-        </div>
-    <% } %>
 
-    <!-- Form to Add User to Organization -->
-    <form action="/add_employee" method="POST">
-        <label for="email">User's Email:</label>
-        <input type="email" name="email" id="email" required>
+            <label for="email">User's Email:</label>
+            <input type="email" name="email" id="email" required>
         
 
-        <label for="makeAdmin">Make this person an admin:</label>
-        <input type="checkbox" name="makeAdmin" id="makeAdmin">
+            <label for="makeAdmin">Make this person an admin:</label>
+            <input type="checkbox" name="makeAdmin" id="makeAdmin">
 
-        <button type="submit">Add User</button>
-    </form>
+            <button type="submit" class="accept-btn">Add User</button>
+        </form>
+    </div>
+    
 </body>
 </html>
