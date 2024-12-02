@@ -80,16 +80,14 @@ app.get('/register', (req, res) => {
 });
 
 
-
-
-
-
-
-
+/*Register route (POST)
+This will take the information from the 5 fields given and, if valid, store them into MySql
+*/
 app.post('/register', (req, res) => {
+  // Store user entered fields
   const { first_name, last_name, email, password, confirm_password } = req.body;
 
-  // Server-side validation
+ 
 
   // Check if all fields are filled
   if (!first_name || !last_name || !email || !password || !confirm_password) {
@@ -123,7 +121,7 @@ app.post('/register', (req, res) => {
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) throw err;
 
-      // Insert user data into the database with organization and organizationAdmin set to NULL
+      // Insert user data into the database with organization and organization_admin set to NULL
       const newUser = {
         first_name,
         last_name,
@@ -131,7 +129,7 @@ app.post('/register', (req, res) => {
         password: hashedPassword,
         organization_id: null,  // organization_id set to NULL
         organization: null,  // organization set to NULL
-        organization_admin: null // organizationAdmin set to NULL
+        organization_admin: null // organization_admin set to NULL
       };
 
       db.query('INSERT INTO users SET ?', newUser, (err, result) => {
@@ -145,7 +143,9 @@ app.post('/register', (req, res) => {
 
 
 
-
+/*Dashboard (GET)
+Load the calendar with the specific logged in users schedule.
+*/
 app.get('/manager_dashboard', (req, res) => {
   if (req.isAuthenticated()) {
     const userFirstName = req.user ? req.user.first_name : null;
@@ -167,7 +167,7 @@ app.get('/manager_dashboard', (req, res) => {
         console.log('No data found for user id = 1');
         return res.status(404).send('No data found');
       }
-      // Assuming events_data is the BLOB column
+     
       var eventData = results[0].event_data;
       const renderData = {
         ...userObject,
@@ -175,10 +175,6 @@ app.get('/manager_dashboard', (req, res) => {
       };
 
       try {
-        
-        //console.log(events); // Now you have the events data as a JSON object
-
-        
         // Render the page and pass the events data to the view
         res.render('ManagerDashBoard', renderData);
 
@@ -194,47 +190,12 @@ app.get('/manager_dashboard', (req, res) => {
 })
 
 
-app.get('/schedule_employee', (req, res) => {
-  if (req.isAuthenticated()) {
-    const user_id = req.user ? req.user.id : null;
-    const isAdmin = req.user ? req.user.organization_admin : null;
-    console.log(user_id)
-    const organization = req.user ? req.user.organization : null;
 
-    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
-      if (err) {
-        console.error('Database query error:', err);
-        return res.status(500).send('Internal server error'); // Handle errors gracefully
-      }
-
-      if (results.length === 0) {
-        console.log('No data found for user id = 1');
-        return res.status(404).send('No data found');
-      }
-      // Assuming events_data is the BLOB column
-      var eventData = results[0].event_data;
-  
-      try {
-        
-        
-
-        
-        // Render the page and pass the events data to the view
-        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
-
-      } catch (e) {
-        console.error('Invalid JSON data:', e);
-        res.status(400).send('Invalid JSON data in database');
-      }
-    }); 
-    } else {
-    res.redirect('/');
-  }
-})
-
-
+/*Dashboard (GET)
+*/
 app.get('/view_requests', (req, res) => {
   if (req.isAuthenticated()) {
+    //Information directly sent to the front end to display user specific data
     const userOrganization = req.user ? req.user.organization : null;
     const isAdmin = req.user ? req.user.organization_admin : null;
     const userObject = {
@@ -249,18 +210,58 @@ app.get('/view_requests', (req, res) => {
 })
 
 
-app.get('/add_employee', (req, res) => {
+
+
+
+/*Schedule Employee (GET)
+Check if user is logged in,
+Loads the data_event column from specific user that is logged in.
+Should only display the users schedule and not others.
+*/
+app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
-    const organization = req.user ? req.user.organization : null;
+    const user_id = req.user ? req.user.id : null;
     const isAdmin = req.user ? req.user.organization_admin : null;
-    res.render('add_employee', { isAdmin, organization, messages: req.flash()})
-    
-  } else {
+    console.log(user_id)
+    const organization = req.user ? req.user.organization : null;
+
+    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).send('Internal server error'); // Handle errors
+      }
+
+      if (results.length === 0) {
+        console.log('No data found for user id = 1');
+        return res.status(404).send('No data found');
+      }
+      //Take event data from MySQL results
+      var eventData = results[0].event_data;
+  
+      try {
+        // Render the page and pass the events data to the view
+        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
+
+      } catch (e) {
+        console.error('Invalid JSON data:', e);
+        res.status(400).send('Invalid JSON data in database');
+      }
+    }); 
+    } else {
     res.redirect('/');
   }
 })
 
+
 app.use(bodyParser.json());
+
+
+/*Schedule (POST)
+This POST is when the admin is done adding to their schedule and wants to save the data.
+Loads the information from the calendar as JSON,
+Parses the data to submit the schedule information based on each employee, and saves to the
+event_data column for the specific employee.
+*/
 app.post('/schedule_employee', (req, res) => {
  
   // Retrieve all events from the calendar
@@ -364,7 +365,27 @@ app.post('/schedule_employee', (req, res) => {
 });
 
 
-// POST route to add employee to an organization
+/*Add Employee (GET)
+Check if logged in,
+Render page with user session details and any error messages.
+*/
+app.get('/add_employee', (req, res) => {
+  if (req.isAuthenticated()) {
+    //Information directly sent to the front end to display user specific data
+    const organization = req.user ? req.user.organization : null;
+    const isAdmin = req.user ? req.user.organization_admin : null;
+    res.render('add_employee', { isAdmin, organization, messages: req.flash()})
+    
+  } else {
+    res.redirect('/');
+  }
+})
+
+/*Add Employee (POST)
+Take the email that the admin entered and perform validation checks such as,
+If they exist, if they're already in an organization.
+Then add the user to the logged in admin's organization.
+*/
 app.post('/add_employee', (req, res) => {
   // Ensure the user is an authenticated admin
   if (!req.isAuthenticated || !req.isAuthenticated()) {
@@ -373,7 +394,7 @@ app.post('/add_employee', (req, res) => {
   }
 
   const { email, makeAdmin } = req.body;
-  const userId = req.user.id; // Assuming `req.user.id` is the admin's ID (ensure passport is properly configured)
+  const userId = req.user.id; 
 
   // Ensure the logged-in user is an admin
   db.promise().execute('SELECT organization_admin FROM users WHERE id = ?', [userId])
@@ -431,7 +452,10 @@ app.post('/add_employee', (req, res) => {
 
 
 
-// Route to render 'remove_employee' page and display employees
+/*Remove Employee (POST)
+Similar to view employee
+Retrieve list of users in same organization as the user.
+*/
 app.get('/remove_employee', (req, res) => {
   // Ensure the user is authenticated
   if (!req.isAuthenticated() || !req.user) {
@@ -453,11 +477,8 @@ app.get('/remove_employee', (req, res) => {
       const organizationId = rows[0].organization_id; // The logged-in user's organization_id
       const organization = req.user ? req.user.organization : null;
       
-
-
       if (!organizationId) {
         req.flash('error', 'You are not assigned to any organization.');
-        //return res.redirect('/remove_employee');
       }
 
       // Step 2: Search for all employees in the same organization
@@ -484,12 +505,15 @@ app.get('/remove_employee', (req, res) => {
     });
 });
 
-// Route to handle the removal of an employee
+/*Remove Employee (POST)
+Based on button click, remove selected employee.
+Right now trying to delete oneself will not work as to avoid an empty organization.
+*/
 app.post('/remove_employee/:id', (req, res) => {
   const employeeId = req.params.id; // Get the employee's ID to be removed
   const loggedInUserId = req.user.id; // Logged-in user’s ID
 
-  // Step 1: Fetch the logged-in user's organization_id
+  // Step 1: Fetch the logged-in user's organization_id to see if they're in an organization
   db.promise().execute('SELECT organization_id FROM users WHERE id = ?', [loggedInUserId])
     .then(([rows]) => {
       if (rows.length === 0) {
@@ -501,7 +525,6 @@ app.post('/remove_employee/:id', (req, res) => {
 
       if (!organizationId) {
         req.flash('error', 'You are not assigned to any organization.');
-        //return res.redirect('/dashboard');
       }
 
       // Step 2: Check if the user being deleted is the last employee in the organization
@@ -560,15 +583,16 @@ app.post('/remove_employee/:id', (req, res) => {
 
 
 
-
+/*View Employee (GET)
+If logged in, display the list of users in the same organization as you.
+If you are not part of one, then a message explaining so will show.
+*/
 app.get('/view_employee', (req, res) => {
 
   if (req.isAuthenticated()) {
-    //res.render('view_employee', {messages: req.flash()})
-
-    const loggedInUserId = req.user.id; // Logged-in user’s ID (retrieved from session)
+    //Information directly sent to the front end to display user specific data
+    const loggedInUserId = req.user.id; 
     const isAdmin = req.user ? req.user.organization_admin : null;
-    
 
     // Step 1: Fetch the logged-in user's organization_id from the database
     db.promise().execute('SELECT organization_id FROM users WHERE id = ?', [loggedInUserId])
@@ -583,7 +607,6 @@ app.get('/view_employee', (req, res) => {
 
         if (!organizationId) {
           req.flash('error', 'You are not assigned to any organization.');
-          //return res.redirect('/view_employee');
         }
 
         // Step 2: Search for all employees in the same organization
@@ -618,8 +641,6 @@ app.get('/view_employee', (req, res) => {
     {
     res.redirect('/');
     } 
-
-  
 });
 
 
@@ -627,7 +648,9 @@ app.get('/view_employee', (req, res) => {
 
 
 
-
+/*Create Organization route (GET)
+If logged in, load page along with error messages
+*/
 app.get('/create_org', (req, res) => {
   const isAdmin = req.user ? req.user.organization_admin : null;
   if (req.isAuthenticated()) {
@@ -644,16 +667,23 @@ app.get('/create_org', (req, res) => {
 
 
 
-// Handle Organization Creation
+/*Create Organization route (POST)
+Check if logged in,
+Take the user entered name of the new organization, then perform validation checks
+We do not allow two organizations with the same name.
+When creating an organization, the user must not be in an organization already.
+When the validation is finished, create organization id and add it to the users table and organizations table
+inside of MySQL. Then display success message.
+*/
 app.post('/create_org', async (req, res) => {
   if (!req.isAuthenticated()) {
       return res.redirect('/login');  // Check authentication within POST route body
   }
 
+  //Store session user info
   const organizationName = req.body.organization_name;
-  const userId = req.user.id; // Assuming `req.user.id` is the user's ID (ensure passport is properly configured)
+  const userId = req.user.id; 
 
-  console.log(organizationName)
 
   // Validate the organization name (simple check for empty string)
   if (!organizationName || organizationName.trim() === '') {
