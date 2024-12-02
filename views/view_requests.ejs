@@ -57,7 +57,43 @@
 
                 <button type="submit">Submit Request</button>
             </form>
+
+            <div id="requests-table" class="requests-table">
+                <h2>Your Requests</h2>
+                <!-- Active requests will be displayed here -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Request Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!--% if (isAdmin === 1) { %-->
+                            <% if (requests.length > 0) { %>
+                                <% requests.forEach(function(request) { %>
+                                    <tr>
+                                        <!-- formatting for the dates within the requests table -->
+                                        <td><%= new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
+                                        <td><%= new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
+                                        <td><%= request.request_type %></td>
+                                        <td><%= request.status %></td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5">No pending requests.</td>
+                                </tr>
+                            <% } %>
+                        <!--% } %-->
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        
 
         <!-- View for Admin -->
         <div id="admin-view" class="admin-container" style="display: none;">
@@ -75,10 +111,10 @@
                     </thead>
                     <tbody>
                         <% if (isAdmin === 1) { %>
-                            <% if (pendingRequests.length > 0) { %>
-                                <% pendingRequests.forEach(function(request) { %>
+                            <% if (requests.length > 0) { %>
+                                <% requests.forEach(function(request) { %>
                                     <tr>
-                                        <td><%= request.employee_id %></td>
+                                        <td><%= request.employee_name %></td>
                                         <!-- formatting for the dates within the requests table -->
                                         <td><%= new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
                                         <td><%= new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>

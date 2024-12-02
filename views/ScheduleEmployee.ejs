@@ -43,7 +43,41 @@
             <div id="calendar1" data-binding-calendar='{ "views": { "fullMonth": { "showExtraTitleBarButtons": false } } }'></div>
             
         </div>
-        <button id = "exportButton">Export Events to MySQL</button>
+        <button id = "exportButton">Save Shifts</button>
+
+        <div id="requests-table" class="requests-table">
+            <h2>Accepted Requests</h2>
+            <!-- Active requests will be displayed here -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Request Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (requests.length > 0) { %>
+                        <% requests.forEach(function(request) { %>
+                            <tr>
+                                <td><%= request.employee_name %></td>
+                                <!-- formatting for the dates within the requests table -->
+                                <td><%= new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
+                                <td><%= new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %></td>
+                                <td><%= request.request_type %></td>
+                                <td><%= request.status %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">No Accepted Requests.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
         </body>
         
         <script>
@@ -81,7 +115,7 @@
             var eventData;
             document.getElementById('exportButton').addEventListener('click', function() {
             // Call the export function
-                eventData = calendarInstance1.export('json');
+                
                 events = calendarInstance1.getEvents();
                 console.log(events)
             
@@ -93,12 +127,34 @@
                         },
                         body: JSON.stringify(events)  // Directly send the string, no need to stringify
                     })
-                    .then(data => console.log('Success:', data))
+                    .then(response => response.json())  // Parse JSON from the response
+                    .then(data => {
+            console.log("Received data:", data);  // Check what data you're receiving
+            if (data.conflicts && data.conflicts.length > 0) {
+                // If there are conflicts, display the conflict message
+                displayConflictMessage(data.conflicts);
+            } else {
+                // If no conflict, show a success message
+                alert(data.message || 'Events successfully saved.');
+            }
+        })
                     .catch(error => {
                     console.error('Error saving event:', error);
                     alert('There was an error saving the event.');
                     });
                 }
             });
+            function displayConflictMessage(conflicts) {
+                let message = "There are conflicts with the following events:\n\n";
+                conflicts.forEach(conflict => {
+                    // Check if conflict.conflictWith exists and has at least one element
+                    if (conflict.conflictWith && conflict.conflictWith.length > 0) {
+                        message += `Event: ${conflict.event.title} conflicts with time-off request from ${conflict.conflictWith[0].start_date} to ${conflict.conflictWith[0].end_date}.\n`;
+                    } else {
+                        message += `Event: ${conflict.event.title} has an unknown conflict.\n`;
+                    }
+                });
+                alert(message);  // Show the conflicts to the user
+            }
         </script>
         </html>

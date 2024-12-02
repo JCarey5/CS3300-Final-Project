@@ -197,32 +197,50 @@ app.get('/schedule_employee', (req, res) => {
     console.log(user_id)
     const organization = req.user ? req.user.organization : null;
 
-    db.query('SELECT event_data FROM users WHERE id = ?', [user_id],  (err, results) => {
-      if (err) {
-        console.error('Database query error:', err);
-        return res.status(500).send('Internal server error'); // Handle errors gracefully
-      }
-
-      if (results.length === 0) {
-        console.log('No data found for user id = 1');
-        return res.status(404).send('No data found');
-      }
-      
-      var eventData = results[0].event_data;
-  
-      try {
-        
-        
-
-        
-        // Render the page and pass the events data to the view
-        res.render('ScheduleEmployee', { isAdmin, organization, eventData: eventData });
-
-      } catch (e) {
-        console.error('Invalid JSON data:', e);
-        res.status(400).send('Invalid JSON data in database');
-      }
-    }); 
+    
+    const userEventDataPromise = new Promise((resolve, reject) => {
+      db.query('SELECT event_data FROM users WHERE id = ?', [user_id], (err, results) => {
+        if (err) {
+          reject('Database query error for user event data:', err);
+        }
+        if (results.length === 0) {
+          reject('No data found for user id');
+        } else {
+          resolve(results[0].event_data);
+        }
+      });
+    });
+    
+    const requestsDataPromise = new Promise((resolve, reject) => {
+      db.query(`
+        SELECT requests.*, CONCAT(users.first_name, ' ', users.last_name) AS employee_name
+        FROM requests
+        JOIN users ON requests.employee_id = users.id
+        WHERE requests.status = ?`, ['Approved'], (err, results) => {
+          if (err) {
+            reject('Error fetching requests:', err);
+          } else {
+            resolve(results);
+          }
+      });
+    });
+    
+    // Wait for both promises to resolve
+    Promise.all([userEventDataPromise, requestsDataPromise])
+      .then(([eventData, requests]) => {
+        // Both promises resolved successfully
+        console.log("accepted",requests);
+        res.render('ScheduleEmployee', {
+          isAdmin,
+          organization,
+          eventData: eventData,
+          requests: requests
+        });
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(500).send('Error occurred while fetching data');
+      });
     } else {
     res.redirect('/');
   }
@@ -245,21 +263,35 @@ app.get('/view_requests', (req, res) => {
     
     if(isAdmin === 1)
     {
-      db.query('SELECT * FROM requests WHERE status = ?', ['Pending'], (err, results) => {
+      db.query(`
+        SELECT requests.*, CONCAT(users.first_name, ' ', users.last_name) AS employee_name
+        FROM requests
+        JOIN users ON requests.employee_id = users.id
+        WHERE requests.status = ?`, ['Pending'], (err, results) => {
         if (err) {
             console.error('Error fetching pending requests:', err);
             return res.status(500).send('Internal server error');
         }
         const renderData = {
           ...userObject,
-          pendingRequests: results
+          requests: results
         };
         console.log("array of results", results);
         res.render('view_requests', renderData);
       });
     }
     else{
-      res.render('view_requests', userObject)
+      db.query(`SELECT* FROM requests WHERE requests.employee_id = ?`, [req.user.id], (err, results) => {
+            if (err) {
+                console.error('Error fetching requests for the current user:', err);
+                return res.status(500).send('Internal server error');
+            }
+            const renderData = {
+              ...userObject,
+              requests: results
+            };
+            res.render('view_requests', renderData);
+          });
     }
     
     
@@ -322,7 +354,7 @@ Check if user is logged in,
 Loads the data_event column from specific user that is logged in.
 Should only display the users schedule and not others.
 */
-app.get('/schedule_employee', (req, res) => {
+/*app.get('/schedule_employee', (req, res) => {
   if (req.isAuthenticated()) {
     const user_id = req.user ? req.user.id : null;
     const isAdmin = req.user ? req.user.organization_admin : null;
@@ -354,11 +386,34 @@ app.get('/schedule_employee', (req, res) => {
     } else {
     res.redirect('/');
   }
-})
+})*/
 
 
 app.use(bodyParser.json());
 
+const formatDate = (date) => {
+  // Format the date using toLocaleString with options for the correct format
+  const options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false, // 24-hour format
+  };
+
+  const dateString = new Date(date).toLocaleString('en-GB', options); // en-GB for a more universal approach, you can adjust based on your locale
+
+  // Split the formatted string into date and time
+  const [datePart, timePart] = dateString.split(', ');
+
+  // Reformat to MySQL DATETIME format (YYYY-MM-DD HH:mm:ss)
+  const [day, month, year] = datePart.split('/');
+  const formattedDate = `${year}-${month}-${day} ${timePart}`;
+
+  return formattedDate;
+};
 
 /*Schedule (POST)
 This POST is when the admin is done adding to their schedule and wants to save the data.
@@ -366,107 +421,121 @@ Loads the information from the calendar as JSON,
 Parses the data to submit the schedule information based on each employee, and saves to the
 event_data column for the specific employee.
 */
-app.post('/schedule_employee', (req, res) => {
- 
-  // Retrieve all events from the calendar
-  const organization_id = req.user ? req.user.organization_id : null;
-
-  // Query the employees from the database based on the organization_id
-  db.query('SELECT id, first_name, last_name FROM users WHERE organization_id = ?', [organization_id], (err, results) => {
-      if (err) {
-          console.error('Database query error:', err);
-          return res.status(500).send('Internal server error'); // Handle errors gracefully
-      }
+app.post('/schedule_employee', async (req, res) => {
+  try {
+      // Retrieve all employees
+      const organization_id = req.user ? req.user.organization_id : null;
+      const [results] = await db.promise().query('SELECT id, first_name, last_name FROM users WHERE organization_id = ?', [organization_id]);
 
       if (results.length === 0) {
           console.log('No data found for user id = 1');
           return res.status(404).send('No data found');
       }
 
-      // Assuming results contain employee data; map to an array of employees
-      const employees = results.map(employee => {
-          return {
-              id: employee.id,
-              fullName: `${employee.first_name} ${employee.last_name}`
-          };
-      });
+      // Map employees from the query result
+      const employees = results.map(employee => ({
+          id: employee.id,
+          fullName: `${employee.first_name} ${employee.last_name}`
+      }));
 
-      console.log('Employees:', employees);  // Logs the employees array
+      console.log('Employees:', employees);
 
-      // Now, process the events data from the request
-      var eventJson = req.body;
-      console.log('Event JSON:', eventJson); // Logs the event JSON data
+      const eventJson = req.body;
+      //console.log('Event JSON:', eventJson);
 
       const userID = req.user.id;
-      
-      //array that will hold all valid events to be sent to managers/admins
       let adminEvents = [];
+      let conflicts = [];
 
-      employees.forEach(employee => {
-        // Filter events for the current employee based on matching the title with the employee's full name
-        const employeeEvents = eventJson.filter(event => {
-            return event.title && event.title.includes(employee.fullName);  // Check if the title contains the employee's full name
-        });
+      // Process each employee asynchronously using async/await
+      for (const employee of employees) {
+          const employeeEvents = eventJson.filter(event => event.title && event.title.includes(employee.fullName));
+          let validEmployeeEvents = [];
+          //console.log(employeeEvents);
 
-          // Prepare the events to be updated for the current employee in the database
-          console.log(employeeEvents)
-          const employeeEventData = JSON.stringify(employeeEvents);
-
-          // Update the employee's record in the database
-          db.promise().execute(
-              'UPDATE users SET event_data = ? WHERE id = ?',
-              [employeeEventData, employee.id]
-          )
-          .then(() => {
-              console.log(`Events for ${employee.fullName} successfully updated.`);
-          })
-          .catch(error => {
-              console.error('Error exporting events for employee:', employee.fullName, error);
-          });
-
-          adminEvents = adminEvents.concat(employeeEvents);
-          if (employeeEvents.length > 0) {
-            console.log('Events found');
-        } else {
-            console.log(`No events found for ${employee.fullName}`);
-
+          // Check each event for conflicts with time-off requests
+          for (const event of employeeEvents) {
+              const eventStart = formatDate(event.from);
+              console.log("Event start", eventStart);
+              const eventEnd = formatDate(event.to);
+              console.log("Start Date", eventStart)
+              try {
+                  // Query to check for time-off conflicts
+                  const [timeOffResults] = await db.promise().query(`
+                      SELECT * FROM requests 
+                      WHERE employee_id = ? 
+                        AND status = 'Approved' 
+                        AND (
+                          (start_date <= ? AND end_date >= ?)  -- Event overlaps with time-off
+                          OR
+                          (start_date <= ? AND end_date >= ?)  -- Time-off overlaps with event
+                      )`, [employee.id, eventStart, eventEnd, eventStart, eventEnd]);
+                  //console.log("FOUND CONFLICTS", timeOffResults)
+                  if (timeOffResults.length > 0) {
+                      // If a conflict is found, add it to the conflicts array
+                      conflicts.push({
+                          event: event,
+                      });
+                      console.log("CONFLICTS",conflicts);
+                      console.log(`Event ${event.title} conflicts with a time-off request for ${employee.fullName}`);
+                  } else {
+                      // Only add to adminEvents if no conflict is found
+                      validEmployeeEvents.push(event);
+                      adminEvents = adminEvents.concat([event]);
+                      
+                  }
+              } catch (err) {
+                  console.error('Error checking time-off requests:', err);
+              }
           }
-      });
+          if (validEmployeeEvents.length > 0) {
+            const validEmployeeEventData = JSON.stringify(validEmployeeEvents);
+            await db.promise().execute(
+                'UPDATE users SET event_data = ? WHERE id = ?',
+                [validEmployeeEventData, employee.id]
+            );
+            console.log(`Employee ${employee.fullName} events successfully updated.`);
+        } 
+      }
 
-      // Send the event data to the database (for the current user)
-      if (adminEvents.length > 0) {
-        const adminEventData = JSON.stringify(adminEvents);
-
-        // Assuming you want to send the data to all admins, you can query admin users and update them
-        db.query('SELECT id FROM users WHERE organization_id = ? AND organization_admin = ?', [organization_id, '1'], (err, adminResults) => {
-            if (err) {
-                console.error('Database query error for admins:', err);
-                return res.status(500).send('Internal server error');
-            }
-
-            // Update all admin users with the total event data
-            const adminPromises = adminResults.map(admin => {
-                return db.promise().execute(
-                    'UPDATE users SET event_data = ? WHERE id = ?',
-                    [adminEventData, admin.id]
-                );
-            });
-
-            // Execute all admin update queries in parallel
-            Promise.all(adminPromises)
-                .then(() => {
-                    console.log('Admin event data successfully updated.');
-                })
-                .catch(error => {
-                    console.error('Error exporting events to admins:', error);
-                });
+      if (conflicts.length > 0) {
+        return res.send({
+          conflicts: conflicts,
+          message: 'There are conflicts with time-off requests.'
         });
     }
 
-    // Send the response to the current manager
-    res.status(200).json({ message: 'Events successfully exported to database!' });
+      // Log the length of admin events after all async operations
+      console.log("ADMIN LENGTH:", adminEvents.length);
 
-  });
+      // Only proceed to update the admin events if there are events to save
+      if (adminEvents.length > 0) {
+          console.log("INSIDE LENGTH > 0");
+          const adminEventData = JSON.stringify(adminEvents);
+
+          // Query all admin users and update them with the event data
+          const [adminResults] = await db.promise().query('SELECT id FROM users WHERE organization_id = ? AND organization_admin = ?', [organization_id, '1']);
+
+          // Update admin events for each admin concurrently
+          const adminPromises = adminResults.map(admin => {
+              return db.promise().execute(
+                  'UPDATE users SET event_data = ? WHERE id = ?',
+                  [adminEventData, admin.id]
+              );
+          });
+
+          await Promise.all(adminPromises); // Ensure all promises are resolved before continuing
+
+          console.log('Admin event data successfully updated.');
+      }
+
+      // Send the response to the manager
+      res.status(200).json({ message: 'Events successfully exported to database!' });
+
+  } catch (err) {
+      console.error('Error:', err);
+      res.status(500).send('Internal server error');
+  }
 });
 
 
