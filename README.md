@@ -106,6 +106,7 @@ MySQL version 8.0.40.0 (as of December 1, 2024)
 ## Code Structure and Organization
 ### Tech Stack Structure
 **
+```
 User Request
      |
      v
@@ -124,6 +125,7 @@ Middleware Chain
      v
 Server Response
  (Authenticated result, Flash message)
+```
 **
 
 ### Organization of Files
