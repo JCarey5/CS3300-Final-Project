@@ -335,6 +335,61 @@ Should only display the users schedule and not others.
     res.redirect('/');
   }
 })*/
+app.get('/schedule_employee', (req, res) => {
+  if (req.isAuthenticated()) {
+    const user_id = req.user ? req.user.id : null;
+    const isAdmin = req.user ? req.user.organization_admin : null;
+    console.log(user_id)
+    const organization = req.user ? req.user.organization : null;
+
+    
+    const userEventDataPromise = new Promise((resolve, reject) => {
+      db.query('SELECT event_data FROM users WHERE id = ?', [user_id], (err, results) => {
+        if (err) {
+          reject('Database query error for user event data:', err);
+        }
+        if (results.length === 0) {
+          reject('No data found for user id');
+        } else {
+          resolve(results[0].event_data);
+        }
+      });
+    });
+    
+    const requestsDataPromise = new Promise((resolve, reject) => {
+      db.query(`
+        SELECT requests.*, CONCAT(users.first_name, ' ', users.last_name) AS employee_name
+        FROM requests
+        JOIN users ON requests.employee_id = users.id
+        WHERE requests.status = ?`, ['Approved'], (err, results) => {
+          if (err) {
+            reject('Error fetching requests:', err);
+          } else {
+            resolve(results);
+          }
+      });
+    });
+    
+    // Wait for both promises to resolve
+    Promise.all([userEventDataPromise, requestsDataPromise])
+      .then(([eventData, requests]) => {
+        // Both promises resolved successfully
+        console.log("accepted",requests);
+        res.render('ScheduleEmployee', {
+          isAdmin,
+          organization,
+          eventData: eventData,
+          requests: requests
+        });
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(500).send('Error occurred while fetching data');
+      });
+    } else {
+    res.redirect('/');
+  }
+})
 
 
 app.use(bodyParser.json());
