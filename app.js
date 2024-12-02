@@ -374,7 +374,6 @@ app.get('/schedule_employee', (req, res) => {
     Promise.all([userEventDataPromise, requestsDataPromise])
       .then(([eventData, requests]) => {
         // Both promises resolved successfully
-        console.log("accepted",requests);
         res.render('ScheduleEmployee', {
           isAdmin,
           organization,
@@ -441,7 +440,7 @@ app.post('/schedule_employee', async (req, res) => {
           fullName: `${employee.first_name} ${employee.last_name}`
       }));
 
-      console.log('Employees:', employees);
+      //console.log('Employees:', employees);
 
       const eventJson = req.body;
       //console.log('Event JSON:', eventJson);
@@ -459,9 +458,9 @@ app.post('/schedule_employee', async (req, res) => {
           // Check each event for conflicts with time-off requests
           for (const event of employeeEvents) {
               const eventStart = formatDate(event.from);
-              console.log("Event start", eventStart);
+              //console.log("Event start", eventStart);
               const eventEnd = formatDate(event.to);
-              console.log("Start Date", eventStart)
+              //console.log("Start Date", eventStart)
               try {
                   // Query to check for time-off conflicts
                   const [timeOffResults] = await db.promise().query(`
@@ -479,12 +478,13 @@ app.post('/schedule_employee', async (req, res) => {
                       conflicts.push({
                           event: event,
                       });
-                      console.log("CONFLICTS",conflicts);
+                      //console.log("CONFLICTS",conflicts);
                       console.log(`Event ${event.title} conflicts with a time-off request for ${employee.fullName}`);
                   } else {
                       // Only add to adminEvents if no conflict is found
                       validEmployeeEvents.push(event);
-                      adminEvents = adminEvents.concat([event]);
+                      adminEvents.push(event);
+                      console.log("CURRENT ADMIN EVENTS", adminEvents);
                       
                   }
               } catch (err) {
@@ -498,18 +498,21 @@ app.post('/schedule_employee', async (req, res) => {
                 [validEmployeeEventData, employee.id]
             );
             console.log(`Employee ${employee.fullName} events successfully updated.`);
+            
         } 
       }
+      console.log("ADMIN EVENTS:", adminEvents)
 
-      if (conflicts.length > 0) {
+      /*if (conflicts.length > 0) {
         return res.send({
           conflicts: conflicts,
           message: 'There are conflicts with time-off requests.'
         });
-    }
+    }*/
 
       // Log the length of admin events after all async operations
       console.log("ADMIN LENGTH:", adminEvents.length);
+      console.log("Final Admin", adminEvents);
 
       // Only proceed to update the admin events if there are events to save
       if (adminEvents.length > 0) {
@@ -532,13 +535,23 @@ app.post('/schedule_employee', async (req, res) => {
           console.log('Admin event data successfully updated.');
       }
 
+      if (conflicts.length > 0) {
+        return res.send({
+          conflicts: conflicts,
+          message: 'There are conflicts with time-off requests.'
+        });
+      }
+      
       // Send the response to the manager
       res.status(200).json({ message: 'Events successfully exported to database!' });
+
 
   } catch (err) {
       console.error('Error:', err);
       res.status(500).send('Internal server error');
   }
+
+  
 });
 
 

@@ -36,14 +36,7 @@
         </div>
         
 
-
-        <!-- Check if organization exists and display accordingly -->
-        <% if (organization && organization !== null) { %>
-            <h1>Requests for <%= organization %></h1>
-        <% } else { %>
-            <h1>Requests</h1>
-            <p>You are not currently part of an organization.</p>
-        <% } %>
+    
 
         <!-- View for Employee -->
         <div id="employee-view" class="form-container">
@@ -66,6 +59,14 @@
             </form>
 
             <div id="requests-table" class="requests-table">
+                <div class = "form-container">
+                    <!-- Check if organization exists and display accordingly -->
+                    <% if (organization && organization !== null) { %>
+                        <h1>Requests for <%= organization %></h1>
+                    <% } else { %>
+                        <h1>Requests</h1>
+                        <p>You are not currently part of an organization.</p>
+                    <% } %>
                 <h2>Your Requests</h2>
                 <!-- Active requests will be displayed here -->
                 <table>
@@ -98,12 +99,21 @@
                     </tbody>
                 </table>
             </div>
+            </div>
         </div>
 
         
 
         <!-- View for Admin -->
         <div id="admin-view" class="admin-container" style="display: none;">
+            <div class = "form-container">
+                <!-- Check if organization exists and display accordingly -->
+                <% if (organization && organization !== null) { %>
+                    <h1>Requests for <%= organization %></h1>
+                <% } else { %>
+                    <h1>Requests</h1>
+                    <p>You are not currently part of an organization.</p>
+                <% } %>
             <div id="requests-table" class="requests-table">
                 <!-- Active requests will be displayed here -->
                 <table>
@@ -114,6 +124,7 @@
                             <th>End Date</th>
                             <th>Request Type</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -142,6 +153,7 @@
                     </tbody>
                 </table>
             </div>
+            </divc>
         </div>
 
     </body>
