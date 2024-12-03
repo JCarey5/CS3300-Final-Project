@@ -156,6 +156,10 @@ which in this case is `http://localhost:3000/` by default.
 
 
 # Documentation
+
+## Test Cases
+[Test Cases for MinuteToManage](/MinuteToManage Test Cases.pdf)
+
 ### Tech Stack:
 CSS
 HTML
