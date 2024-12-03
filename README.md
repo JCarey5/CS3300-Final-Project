@@ -154,11 +154,12 @@ Now that you have set up your VSCode and MySQL, the program can be run simply by
 which in this case is `http://localhost:3000/` by default.
 
 
+# Test Cases
+[MinuteToManage Test Cases](MinuteToManage%20Test%20Cases.pdf)
+
+
 
 # Documentation
-
-## Test Cases
-[MinuteToManage Test Cases](MinuteToManage%20Test%20Cases.pdf)
 
 ### Tech Stack:
 CSS
