@@ -38,9 +38,9 @@ npm install jcalendar.js
 ## MySql Prep
 ### Install MySql
 Follow this link [MySql](https://dev.mysql.com/downloads/installer/) to the MySql page and use the download button for Windows (x86, 32-bit), MSI Installer, this is the one with 306.5M downloads and this tag (mysql-installer-community-8.0.40.0.msi)
-You will then follow the installer, downloading the server version of mysql2 onto your computer and setting the root password as you would like.
+You will then follow the installer, downloading the server version of mysql2 onto your computer and setting the root password to password by default. IF YOU CHOOSE TO SET A DIFFERENT PASSWORD YOU MUST CHANGE THIS WITHIN THE DB.JS FILE IN THE LINE (password: 'password')
 ### Set Up MySql and Database
-Now you must go to the MySql Command line that is now included on your machine and run these commands to set up the Database and tables:
+Now you must go to the MySql Command line by going to the search bar by pressing the windows key (if you are on windows) and searching MySQL 8.0 Command Line Client that is now included on your machine and run these commands to set up the Database and tables:
 ```
 CREATE DATABASE userDB;
 
