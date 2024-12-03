@@ -16,8 +16,9 @@ The first thing that you need to do is make sure that the default terminal you a
 After pressing enter select the Git Bash option. You can then click the terminal option near the bottom of the screen and use the + button to add a bash terminal that is used to run our program
 ### Neccesary Extensions
 For this you will need to install extensions onto your VSCode by either pressing `Ctrl + Shift + X` or by clicking the extensions icon on the left side of the terminal (Four square blocks with the top right one disconnected).  
-Now install these extensions, EJS language support, HTML CSS support, JavaScript, JavaScript (ES6) code snippets, and Start git-bash  
-![Screenshot 2024-11-28 231830](https://github.com/user-attachments/assets/04226e51-7883-444a-9a81-1a92a0d751ee)  
+Now install these extensions, EJS language support, HTML CSS support, JavaScript (ES6) code snippets, and Start git-bash  
+![Screenshot 2024-12-02 232008](https://github.com/user-attachments/assets/0e8086c0-453a-4faa-96fd-3d6d6c9f3564)
+
 You will also need to use express with this program which can easily be installed through the bash terminal, by using the command: `npm install express`  
 
 ### Duplicating the Github
