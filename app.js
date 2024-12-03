@@ -374,10 +374,6 @@ const formatDate = (date) => {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false, // 24-hour format
   };
   //Make the time correct for what was entered into the calendar
   const dateString = new Date(date).toLocaleString('en-GB', options);
@@ -434,6 +430,7 @@ app.post('/schedule_employee', async (req, res) => {
               const eventStart = formatDate(event.from);
               
               const eventEnd = formatDate(event.to);
+              console.log(eventEnd);
               
               try {
                   // Query to check for time-off conflicts
@@ -442,11 +439,10 @@ app.post('/schedule_employee', async (req, res) => {
                       WHERE employee_id = ? 
                         AND status = 'Approved' 
                         AND (
-                          (start_date <= ? AND end_date >= ?)  -- Event overlaps with time-off
-                          OR
-                          (start_date <= ? AND end_date >= ?)  -- Time-off overlaps with event
+                          (start_date <= Date(?) AND end_date >= Date(?))  -- Event overlaps with time-off
+                          OR (end_date > Date(?) AND end_date < Date(?))
                       )`, [employee.id, eventStart, eventEnd, eventStart, eventEnd]);
-                  
+                  console.log(timeOffResults);
                   if (timeOffResults.length > 0) {
                       // If a conflict is found, add it to the conflicts array
                       conflicts.push({
@@ -473,7 +469,7 @@ app.post('/schedule_employee', async (req, res) => {
             console.log(`Employee ${employee.fullName} events successfully updated.`);
              
       }
-      console.log("ADMIN EVENTS:", adminEvents)
+      //console.log("ADMIN EVENTS:", adminEvents)
 
 
       // Only proceed to update the admin events if there are events to save
